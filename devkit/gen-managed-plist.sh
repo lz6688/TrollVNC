@@ -67,6 +67,7 @@ add_bool ServerCursor          "${TVNC_SERVER_CURSOR:-}"
 add_bool AsyncSwap             "${TVNC_ASYNC_SWAP:-}"
 add_bool BonjourEnabled        "${TVNC_BONJOUR_ENABLED:-}"
 add_bool KeyLogging            "${TVNC_KEY_LOGGING:-}"
+add_bool LocationWakeEnabled   "${TVNC_LOCATION_WAKE_ENABLED:-}"
 
 # Strings (optional)
 add_str DesktopName            "${TVNC_DESKTOP_NAME:-}"
@@ -98,6 +99,9 @@ add_real KeepAliveSec         "${TVNC_KEEPALIVE_SEC:-}"
 add_real Scale                "${TVNC_SCALE:-}"
 add_real DeferWindowSec       "${TVNC_DEFER_WINDOW_SEC:-}"
 add_real WheelStepPx          "${TVNC_WHEEL_STEP_PX:-}"
+add_real LocationWakeRegionLatitude  "${TVNC_LOCATION_WAKE_REGION_LATITUDE:-}"
+add_real LocationWakeRegionLongitude "${TVNC_LOCATION_WAKE_REGION_LONGITUDE:-}"
+add_real LocationWakeRegionRadius    "${TVNC_LOCATION_WAKE_REGION_RADIUS:-}"
 
 # Footer
 cat >> "$PLIST" <<'EOF'

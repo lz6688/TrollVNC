@@ -503,12 +503,20 @@ TrollVNC can be preconfigured via a bundled `Managed.plist` for supervised or fl
   - `WheelStepPx` (0 disables wheel; else 5..1000)
   - `HttpPort` (0 disables; else 1024..65535)
   - `ReverseRepeaterID` (numeric ID for UltraVNC Repeater Mode II)
+  - Location wake:
+    - `LocationWakeRegionLatitude`
+    - `LocationWakeRegionLongitude`
+    - `LocationWakeRegionRadius` (meters)
 
 - Booleans:
-  - `Enabled`, `ClipboardEnabled`, `ViewOnly`, `OrientationSync`, `OrientationPadFix`, `NaturalScroll`, `ServerCursor`, `AsyncSwap`, `KeyLogging`, `AutoAssistEnabled`, `BonjourEnabled`, `FileTransferEnabled`, `SingleNotifEnabled`, `ClientNotifsEnabled`
+  - `Enabled`, `ClipboardEnabled`, `ViewOnly`, `OrientationSync`, `OrientationPadFix`, `NaturalScroll`, `ServerCursor`, `AsyncSwap`, `KeyLogging`, `AutoAssistEnabled`, `BonjourEnabled`, `FileTransferEnabled`, `SingleNotifEnabled`, `ClientNotifsEnabled`, `LocationWakeEnabled`
 
 - `LaunchAtLogin`: `true` | `false` | custom app ID (e.g., `com.zqbb.Dopamine-roothide`)
   - Whether to start TrollVNC at login; if set to a custom app ID, it launches that app instead.
+- `LocationWakeEnabled`: `true` | `false`
+  - Enables Core Location-based wake triggers for the app chain. Requires `Always` location authorization.
+- `LocationWakeRegionLatitude` + `LocationWakeRegionLongitude` + `LocationWakeRegionRadius`
+  - Optional circular region for `region monitoring`; if omitted, the app only uses significant-change monitoring.
 
 **Notes**:
 

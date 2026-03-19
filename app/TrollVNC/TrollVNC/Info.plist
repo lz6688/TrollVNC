@@ -9,6 +9,10 @@
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>TrollVNC uses the local network to advertise and accept VNC connections from clients on your LAN.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>TrollVNC can use location events to wake the app and restore its remote access service in the background.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>TrollVNC uses your location to configure optional background wake triggers for its remote access service.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

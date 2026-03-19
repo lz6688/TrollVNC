@@ -24,6 +24,8 @@
 		615401BD2EB1180C009FDD6F /* TVNCViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 61C756B62E65BDAC00B2B371 /* TVNCViewController.m */; };
 		615401BF2EB1180C009FDD6F /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 61C756662E65B72E00B2B371 /* NetworkExtension.framework */; };
 		615401C12EB1180C009FDD6F /* Preferences.Sim.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 615401AC2EB117FC009FDD6F /* Preferences.Sim.tbd */; };
+		615F024A2F30000100643E64 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 615F02492F30000100643E64 /* CoreLocation.framework */; };
+		615F024A2F30000200643E64 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 615F02492F30000100643E64 /* CoreLocation.framework */; };
 		615401C32EB1180C009FDD6F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 615360A92E65BEFD00643E64 /* Main.storyboard */; };
 		615401C42EB1180C009FDD6F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 61C756CD2E65BE6F00B2B371 /* LaunchScreen.storyboard */; };
 		615401C52EB1180C009FDD6F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 61C7569B2E65BDAC00B2B371 /* Assets.xcassets */; };
@@ -60,6 +62,7 @@
 		615360AE2E65BF0000643E64 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
 		615401AC2EB117FC009FDD6F /* Preferences.Sim.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; path = Preferences.Sim.tbd; sourceTree = "<group>"; };
 		615401CA2EB1180C009FDD6F /* TrollVNC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TrollVNC.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		615F02492F30000100643E64 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		615EFE9E2F1602D700187EAF /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		61B0DD062EB13BEF004CC42B /* TVNCSliderCell.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVNCSliderCell.h; sourceTree = "<group>"; };
 		61B0DD072EB13BEF004CC42B /* TVNCSliderCell.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVNCSliderCell.m; sourceTree = "<group>"; };
@@ -108,6 +111,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				615F024A2F30000100643E64 /* CoreLocation.framework in Frameworks */,
 				61C756672E65B72E00B2B371 /* NetworkExtension.framework in Frameworks */,
 				CC1BF93E2F101B2F00111D96 /* SpringBoardServices.tbd in Frameworks */,
 				61C756BE2E65BDAC00B2B371 /* Preferences.tbd in Frameworks */,
@@ -119,6 +123,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				615F024A2F30000200643E64 /* CoreLocation.framework in Frameworks */,
 				615401BF2EB1180C009FDD6F /* NetworkExtension.framework in Frameworks */,
 				615401C12EB1180C009FDD6F /* Preferences.Sim.tbd in Frameworks */,
 			);
@@ -170,6 +175,7 @@
 		61C756652E65B72E00B2B371 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				615F02492F30000100643E64 /* CoreLocation.framework */,
 				615EFE9E2F1602D700187EAF /* CoreServices.framework */,
 				61C756662E65B72E00B2B371 /* NetworkExtension.framework */,
 			);
