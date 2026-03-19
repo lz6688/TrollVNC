@@ -20,6 +20,11 @@ on:
         description: VNC TCP port (1024–65535; default 5901)
         required: false
         default: "5901"
+      httpport:
+        type: string
+        description: VNC HTTPT port (1024–65535; default 5902)
+        required: false
+        default: "5902"
       view_only:
         type: boolean
         description: Global view-only (ignore input)
@@ -74,7 +79,8 @@ jobs:
 
     strategy:
       matrix:
-        scheme: ["default", "rootless", "roothide", "bootstrap"]
+        # "default", "rootless", "roothide", 
+        scheme: ["bootstrap"]
 
     steps:
       - name: Checkout repository
@@ -114,6 +120,7 @@ jobs:
           # Inputs (kept up to 10)
           TVNC_DESKTOP_NAME: ${{ inputs.desktop_name }}
           TVNC_PORT: ${{ inputs.port }}
+          TVNC_HTTP_PORT: ${{ inputs.httpport }}
           TVNC_VIEW_ONLY: ${{ inputs.view_only }}
           TVNC_SCALE: ${{ inputs.scale }}
           TVNC_FRAME_RATE_SPEC: ${{ inputs.frame_rate_spec }}
@@ -124,14 +131,14 @@ jobs:
           # Fixed values
           TVNC_ENABLED: true
           TVNC_CLIPBOARD_ENABLED: true
-          TVNC_SINGLE_NOTIF_ENABLED: true
-          TVNC_CLIENT_NOTIFS_ENABLED: true
+          TVNC_SINGLE_NOTIF_ENABLED: false
+          TVNC_CLIENT_NOTIFS_ENABLED: false
           TVNC_KEEPALIVE_SEC: 15
           TVNC_ORIENTATION_SYNC: true
           TVNC_NATURAL_SCROLL: false
-          TVNC_AUTO_ASSIST_ENABLED: false
+          TVNC_AUTO_ASSIST_ENABLED: true
           TVNC_SERVER_CURSOR: false
-          TVNC_BONJOUR_ENABLED: false
+          TVNC_BONJOUR_ENABLED: true
           TVNC_KEY_LOGGING: false
           # Optional secrets (empty when not defined)
           TVNC_FULL_PASSWORD: ${{ secrets.TVNC_FULL_PASSWORD }}
