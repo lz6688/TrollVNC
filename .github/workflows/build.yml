@@ -20,6 +20,11 @@ on:
         description: VNC TCP port (1024–65535; default 5901)
         required: false
         default: "5901"
+      httpport:
+        type: string
+        description: VNC HTTPT port (1024–65535; default 5902)
+        required: false
+        default: "5902"
       view_only:
         type: boolean
         description: Global view-only (ignore input)
@@ -74,7 +79,8 @@ jobs:
 
     strategy:
       matrix:
-        scheme: ["default", "rootless", "roothide", "bootstrap"]
+        # "default", "rootless", "roothide", 
+        scheme: ["bootstrap"]
 
     steps:
       - name: Checkout repository
@@ -86,7 +92,6 @@ jobs:
           # Install ldid for iOS code signing
           # Install 7zip for compression
           brew install xcbeautify ldid-procursus p7zip make
-
       - name: Checkout roothide/theos
         uses: actions/checkout@v4
         with:
@@ -114,6 +119,7 @@ jobs:
           # Inputs (kept up to 10)
           TVNC_DESKTOP_NAME: ${{ inputs.desktop_name }}
           TVNC_PORT: ${{ inputs.port }}
+          TVNC_HTTP_PORT: ${{ inputs.httpport }}
           TVNC_VIEW_ONLY: ${{ inputs.view_only }}
           TVNC_SCALE: ${{ inputs.scale }}
           TVNC_FRAME_RATE_SPEC: ${{ inputs.frame_rate_spec }}
@@ -124,37 +130,33 @@ jobs:
           # Fixed values
           TVNC_ENABLED: true
           TVNC_CLIPBOARD_ENABLED: true
-          TVNC_SINGLE_NOTIF_ENABLED: true
-          TVNC_CLIENT_NOTIFS_ENABLED: true
+          TVNC_SINGLE_NOTIF_ENABLED: false
+          TVNC_CLIENT_NOTIFS_ENABLED: false
           TVNC_KEEPALIVE_SEC: 15
           TVNC_ORIENTATION_SYNC: true
           TVNC_NATURAL_SCROLL: false
-          TVNC_AUTO_ASSIST_ENABLED: false
+          TVNC_AUTO_ASSIST_ENABLED: true
           TVNC_SERVER_CURSOR: false
-          TVNC_BONJOUR_ENABLED: false
+          TVNC_BONJOUR_ENABLED: true
           TVNC_KEY_LOGGING: false
           # Optional secrets (empty when not defined)
           TVNC_FULL_PASSWORD: ${{ secrets.TVNC_FULL_PASSWORD }}
           TVNC_VIEWONLY_PASSWORD: ${{ secrets.TVNC_VIEWONLY_PASSWORD }}
         run: |
           bash devkit/gen-managed-plist.sh
-
       - name: Build package (${{ matrix.scheme }})
         run: |
           source devkit/${{ matrix.scheme }}.sh
           FINALPACKAGE=1 gmake clean package
-
       - name: Prepare artifacts
         run: |
           # Create directories for artifacts
           mkdir -p artifacts/dsym-${{ matrix.scheme }}
           mkdir -p artifacts/packages-${{ matrix.scheme }}
-
           # Copy dSYM files
           if [ -d ".theos/obj" ]; then
             find .theos/obj -name "*.dSYM" -exec cp -r {} artifacts/dsym-${{ matrix.scheme }}/ \;
           fi
-
           # Copy packages
           if [ -d "packages" ]; then
             if [ "${{ matrix.scheme }}" == "bootstrap" ]; then
@@ -163,7 +165,6 @@ jobs:
               cp -r packages/*.deb artifacts/packages-${{ matrix.scheme }}/
             fi
           fi
-
       - name: Upload dSYM artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -201,7 +202,6 @@ jobs:
           PACKAGE_VERSION=$(grep 'PACKAGE_VERSION' Makefile | cut -d' ' -f4)
           TAG_NAME="v$PACKAGE_VERSION"
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -209,13 +209,11 @@ jobs:
           name: Release ${{ steps.tag.outputs.tag_name }}
           body: |
             Automated build from release branch
-
             This release contains packages built with:
             - Default scheme
             - Rootless scheme
             - RootHide scheme
             - Bootstrap (TrollStore)
-
             Built on: ${{ github.sha }}
           files: release-packages/**/*
           draft: false
