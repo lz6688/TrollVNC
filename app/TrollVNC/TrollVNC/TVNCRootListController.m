@@ -215,10 +215,6 @@ NS_INLINE NSString *TVNCGetEn0IPAddress(void) {
             } else if ([keyName isEqualToString:@"Enabled"]) {
                 _enabledSpecifier = specifier;
             }
-
-            if([keyName isEqualToString:@"Enabled"]) {
-                [specifier setProperty:@NO forKey:@"enabled"];
-            }
         }
 
         _specifiers = specifiers;
