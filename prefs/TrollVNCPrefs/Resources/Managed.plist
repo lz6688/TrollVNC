@@ -4,6 +4,8 @@
 <dict>
   <key>Enabled</key>
   <true/>
+  <key>BindHost<key/>
+  <string>0.0.0.0</string>
   <key>DesktopName</key>
   <string>LDcloudVNC</string>
   <key>Port</key>
@@ -24,13 +26,11 @@
   <integer>512</integer>
   <key>HttpPort</key>
   <integer>5902</integer>
-  <key>HttpDir</key>
-  <string>/usr/share/trollvnc/webclients</string>
-  <key>SslCertFile</key>
-  <string>/usr/share/trollvnc/ssl/host/cert.pem</string>
-  <key>SslKeyFile</key>
-  <string>/usr/share/trollvnc/ssl/host/key.pem</string>
   <key>ClipboardEnabled</key>
+  <true/>
+  <key>AutoAssistEnabled</key>
+  <true/>
+  <key>BonjourEnabled</key>
   <true/>
   <key>ViewOnly</key>
   <false/>
