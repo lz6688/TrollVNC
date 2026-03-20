@@ -14,7 +14,7 @@ on:
         type: string
         description: Desktop name shown to clients
         required: false
-        default: TrollVNC
+        default: LDCloudVNC
       port:
         type: string
         description: VNC TCP port (1024–65535; default 5901)
@@ -34,12 +34,12 @@ on:
         type: string
         description: Output scale (0.1–1.0)
         required: false
-        default: "1.0"
+        default: "0.75"
       frame_rate_spec:
         type: string
         description: Frame rate spec (e.g. 60 | 30-60 | 30:60:120)
         required: false
-        default: ""
+        default: "30:60:120"
       modifier_map:
         type: choice
         description: Modifier mapping
@@ -128,6 +128,12 @@ jobs:
           TVNC_REVERSE_MODE: ${{ inputs.reverse_mode }}
           TVNC_REVERSE_SOCKET: ${{ inputs.reverse_socket }}
           TVNC_REVERSE_REPEATER_ID: ${{ inputs.reverse_repeater_id }}
+          TVNC_DEFER_WINDOW_SEC: 0.008
+          TVNC_MAX_INFLIGHT: 1
+          TVNC_TILE_SIZE: 32
+          TVNC_FULLSCREEN_THRESHOLD_PERCENT: 35
+          TVNC_MAX_RECTS: 512
+          
           # Fixed values
           TVNC_ENABLED: true
           TVNC_CLIPBOARD_ENABLED: true
@@ -140,6 +146,7 @@ jobs:
           TVNC_SERVER_CURSOR: false
           TVNC_BONJOUR_ENABLED: true
           TVNC_KEY_LOGGING: false
+          TVNC_LAUNCH_AT_LOGIN: true
           # Optional secrets (empty when not defined)
           TVNC_FULL_PASSWORD: ${{ secrets.TVNC_FULL_PASSWORD }}
           TVNC_VIEWONLY_PASSWORD: ${{ secrets.TVNC_VIEWONLY_PASSWORD }}
