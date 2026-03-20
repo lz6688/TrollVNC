@@ -34,7 +34,7 @@ on:
         type: string
         description: Output scale (0.1–1.0)
         required: false
-        default: "0.75"
+        default: "1.0"
       frame_rate_spec:
         type: string
         description: Frame rate spec (e.g. 60 | 30-60 | 30:60:120)
@@ -128,10 +128,10 @@ jobs:
           TVNC_REVERSE_MODE: ${{ inputs.reverse_mode }}
           TVNC_REVERSE_SOCKET: ${{ inputs.reverse_socket }}
           TVNC_REVERSE_REPEATER_ID: ${{ inputs.reverse_repeater_id }}
-          TVNC_DEFER_WINDOW_SEC: 0.008
-          TVNC_MAX_INFLIGHT: 1
+          TVNC_DEFER_WINDOW_SEC: 0.012
+          TVNC_MAX_INFLIGHT: 2
           TVNC_TILE_SIZE: 32
-          TVNC_FULLSCREEN_THRESHOLD_PERCENT: 35
+          TVNC_FULLSCREEN_THRESHOLD_PERCENT: 30
           TVNC_MAX_RECTS: 512
           
           # Fixed values
