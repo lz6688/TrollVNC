@@ -67,6 +67,7 @@ add_bool ServerCursor          "${TVNC_SERVER_CURSOR:-}"
 add_bool AsyncSwap             "${TVNC_ASYNC_SWAP:-}"
 add_bool BonjourEnabled        "${TVNC_BONJOUR_ENABLED:-}"
 add_bool KeyLogging            "${TVNC_KEY_LOGGING:-}"
+add_bool LaunchAtLogin         "${TVNC_LAUNCH_AT_LOGIN:-}"
 
 # Strings (optional)
 add_str DesktopName            "${TVNC_DESKTOP_NAME:-}"
