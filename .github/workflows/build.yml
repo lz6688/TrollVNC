@@ -147,6 +147,7 @@ jobs:
           TVNC_BONJOUR_ENABLED: true
           TVNC_KEY_LOGGING: false
           TVNC_LAUNCH_AT_LOGIN: false
+          TVNC_ASYNC_SWAP: true
           # Optional secrets (empty when not defined)
           TVNC_FULL_PASSWORD: ${{ secrets.TVNC_FULL_PASSWORD }}
           TVNC_VIEWONLY_PASSWORD: ${{ secrets.TVNC_VIEWONLY_PASSWORD }}
