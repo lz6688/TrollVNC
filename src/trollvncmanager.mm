@@ -225,6 +225,7 @@ int main(int argc, const char *argv[]) {
         [gWatchDog setProgramArguments:@[
             executablePath,
             @"-daemon",
+            @"-V",
         ]];
 
         NSMutableDictionary *mEnvs = [[[NSProcessInfo processInfo] environment] mutableCopy];
