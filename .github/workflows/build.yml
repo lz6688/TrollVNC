@@ -19,12 +19,12 @@ on:
         type: string
         description: VNC TCP port (1024–65535; default 5901)
         required: false
-        default: "5901"
+        default: "5959"
       httpport:
         type: string
         description: VNC HTTPT port (1024–65535; default 5902)
         required: false
-        default: "5902"
+        default: "0"
       view_only:
         type: boolean
         description: Global view-only (ignore input)
