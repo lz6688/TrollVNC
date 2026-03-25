@@ -4815,20 +4815,20 @@ static void performStartupDisplayStatusAction(void) {
     static const char *kDisplayStatusName = "com.apple.iokit.hid.displayStatus";
 
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-        uint64_t displayState = getState(kDisplayStatusName);
-        if (displayState != 0) {
-            TVLog(@"Startup display action: display is lit (state=%llu), wait 2s before right-click mapping.",
-                  (unsigned long long)displayState);
-            sleep(2);
-            tvSendStartupRightClickAction();
-            return;
-        }
+        // uint64_t displayState = getState(kDisplayStatusName);
+        // if (displayState != 0) {
+        //     TVLog(@"Startup display action: display is lit (state=%llu), wait 2s before right-click mapping.",
+        //           (unsigned long long)displayState);
+        //     sleep(2);
+        //     tvSendStartupRightClickAction();
+        //     return;
+        // }
 
-        TVLog(@"Startup display action: display is not lit (state=%llu), triggering middle-click mapping.",
-              (unsigned long long)displayState);
-        tvSendStartupMiddleClickAction();
+        // TVLog(@"Startup display action: display is not lit (state=%llu), triggering middle-click mapping.",
+        //       (unsigned long long)displayState);
+        // tvSendStartupMiddleClickAction();
 
-        sleep(2);
+        sleep(1);
 
         TVLog(@"Startup display action: display is not lit (state=%llu), triggering right-click mapping.",
               (unsigned long long)displayState);
