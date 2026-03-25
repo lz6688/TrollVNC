@@ -23,6 +23,7 @@
 #import <Foundation/Foundation.h>
 
 #import <arpa/inet.h>
+#import <notify.h>
 #import <atomic>
 #import <climits>
 #import <cstdio>
@@ -4785,6 +4786,56 @@ static void initializeAndRunRfbServer(void) {
     startBonjour();
 }
 
+static uint64_t getState(char const *const name) {
+    int token = 0;
+    notify_register_check(name, &token);
+    uint64_t state = 0;
+    notify_get_state(token, &state);
+    notify_cancel(token);
+    return state;
+}
+
+static void tvSendStartupMiddleClickAction(void) {
+    static const useconds_t kStartupMappedActionHoldUsec = 200000;
+    STHIDEventGenerator *gen = [STHIDEventGenerator sharedGenerator];
+    [gen powerDown];
+    usleep(kStartupMappedActionHoldUsec);
+    [gen powerUp];
+}
+
+static void tvSendStartupRightClickAction(void) {
+    static const useconds_t kStartupMappedActionHoldUsec = 200000;
+    STHIDEventGenerator *gen = [STHIDEventGenerator sharedGenerator];
+    [gen menuDown];
+    usleep(kStartupMappedActionHoldUsec);
+    [gen menuUp];
+}
+
+static void performStartupDisplayStatusAction(void) {
+    static const char *kDisplayStatusName = "com.apple.iokit.hid.displayStatus";
+
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        uint64_t displayState = getState(kDisplayStatusName);
+        if (displayState != 0) {
+            TVLog(@"Startup display action: display is lit (state=%llu), wait 2s before right-click mapping.",
+                  (unsigned long long)displayState);
+            sleep(2);
+            tvSendStartupRightClickAction();
+            return;
+        }
+
+        TVLog(@"Startup display action: display is not lit (state=%llu), triggering middle-click mapping.",
+              (unsigned long long)displayState);
+        tvSendStartupMiddleClickAction();
+
+        sleep(2);
+
+        TVLog(@"Startup display action: display is not lit (state=%llu), triggering right-click mapping.",
+              (unsigned long long)displayState);
+        tvSendStartupRightClickAction();
+    });
+}
+
 static void handleSignal(int signum) {
     (void)signum;
     TVLog(@"Signal %d received", signum);
@@ -5077,6 +5128,7 @@ int main(int argc, const char *argv[]) {
 
         initializeTilingOrReset();
         initializeAndRunRfbServer();
+        performStartupDisplayStatusAction();
 
         installSignalHandlers();
         installTerminationHandlers();
