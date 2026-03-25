@@ -3,6 +3,7 @@
 compile_commands.json
 /packages
 /refs
+.clang-module-cache
 # prefs/TrollVNCPrefs/Resources/Managed.plist
 
 # Created by https://www.toptal.com/developers/gitignore/api/macos,xcode,swift
