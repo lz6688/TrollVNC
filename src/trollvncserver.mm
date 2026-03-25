@@ -4830,8 +4830,8 @@ static void performStartupDisplayStatusAction(void) {
 
         sleep(1);
 
-        TVLog(@"Startup display action: display is not lit (state=%llu), triggering right-click mapping.",
-              (unsigned long long)displayState);
+        // TVLog(@"Startup display action: display is not lit (state=%llu), triggering right-click mapping.",
+        //       (unsigned long long)displayState);
         tvSendStartupRightClickAction();
     });
 }
