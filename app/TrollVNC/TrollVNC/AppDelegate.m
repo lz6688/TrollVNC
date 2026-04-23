@@ -30,6 +30,7 @@
 
 static NSString *const TVNCWidgetBootstrapTaskIdentifier = @"com.82flex.TrollVNCApp.widget-refresh";
 static NSTimeInterval const TVNCWidgetBootstrapEarliestDelay = 5.0 * 60.0;
+static NSString *const TVNCWidgetBootstrapOpenURLString = @"trollvnc://widget/open";
 
 @implementation AppDelegate
 
@@ -131,6 +132,24 @@ static NSTimeInterval const TVNCWidgetBootstrapEarliestDelay = 5.0 * 60.0;
 }
 
 #if __has_include(<BackgroundTasks/BackgroundTasks.h>)
+- (void)attemptWidgetBootstrapOpenURLWithCompletion:(void (^)(BOOL opened))completion API_AVAILABLE(ios(13.0)) {
+    NSURL *url = [NSURL URLWithString:TVNCWidgetBootstrapOpenURLString];
+    if (url == nil) {
+        completion(NO);
+        return;
+    }
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIApplication *application = UIApplication.sharedApplication;
+        [application openURL:url
+                     options:@{}
+           completionHandler:^(BOOL success) {
+               NSLog(@"[TVNC] Widget bootstrap openURL %@ for %@", success ? @"succeeded" : @"failed", url);
+               completion(success);
+           }];
+    });
+}
+
 - (void)handleWidgetBootstrapTask:(BGAppRefreshTask *)task API_AVAILABLE(ios(13.0)) {
     [self scheduleWidgetBootstrapRefreshIfNeeded];
 
@@ -152,8 +171,12 @@ static NSTimeInterval const TVNCWidgetBootstrapEarliestDelay = 5.0 * 60.0;
     if ([TRWidgetBootstrapState hasPendingWidgetBootstrap]) {
         [[TVNCServiceCoordinator sharedCoordinator] ensureServiceRunning];
         [TRWidgetBootstrapState recordBootstrapAttempt];
-        [TRWidgetBootstrapState clearPendingWidgetBootstrap];
-        finishTask(YES);
+        [self attemptWidgetBootstrapOpenURLWithCompletion:^(BOOL opened) {
+            if (opened) {
+                [TRWidgetBootstrapState clearPendingWidgetBootstrap];
+            }
+            finishTask(YES);
+        }];
         return;
     }
 
