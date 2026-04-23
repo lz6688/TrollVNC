@@ -17,6 +17,7 @@
 
 #import "SceneDelegate.h"
 #import "AppDelegate.h"
+#import "TVNCServiceCoordinator.h"
 
 @interface SceneDelegate ()
 
@@ -39,6 +40,21 @@
     // Release any resources associated with this scene that can be re-created the next time the scene connects.
     // The scene may re-connect later, as its session was not necessarily discarded (see
     // `application:didDiscardSceneSessions` instead).
+}
+
+- (void)scene:(UIScene *)scene openURLContexts:(NSSet<UIOpenURLContext *> *)URLContexts {
+    NSURL *url = URLContexts.anyObject.URL;
+    if (url == nil) {
+        return;
+    }
+
+    if (![[url.scheme lowercaseString] isEqualToString:@"trollvnc"]) {
+        return;
+    }
+
+    if ([[url.host lowercaseString] isEqualToString:@"widget"]) {
+        [[TVNCServiceCoordinator sharedCoordinator] ensureServiceRunning];
+    }
 }
 
 - (void)sceneDidBecomeActive:(UIScene *)scene {

@@ -889,8 +889,11 @@ public final class TRWidgetBootstrapState: NSObject {
 
     public static func markWidgetInstalled() {
         let defaults = sharedDefaults()
+        let wasInstalled = defaults.bool(forKey: widgetInstalledMarkerKey)
         defaults.set(true, forKey: widgetInstalledMarkerKey)
-        defaults.set(true, forKey: widgetBootstrapPendingKey)
+        if !wasInstalled {
+            defaults.set(true, forKey: widgetBootstrapPendingKey)
+        }
         defaults.set(Date(), forKey: widgetLastSeenAtKey)
         defaults.synchronize()
     }
