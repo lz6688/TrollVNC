@@ -30,6 +30,20 @@ private enum TVNCWidgetSharedState {
         defaults.set(Date(), forKey: tvncWidgetLastSeenAtKey)
         defaults.synchronize()
     }
+
+    static func markRemoved() {
+        let defaults = defaults()
+        defaults.set(false, forKey: tvncWidgetInstalledMarkerKey)
+        defaults.set(false, forKey: tvncWidgetBootstrapPendingKey)
+        defaults.synchronize()
+    }
+
+    static func refreshInstallState(isPreview: Bool) {
+        guard !isPreview else {
+            return
+        }
+        markInstalledIfNeeded()
+    }
 }
 
 private struct TVNCWidgetEntry: TimelineEntry {
@@ -42,12 +56,12 @@ private struct TVNCWidgetProvider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (TVNCWidgetEntry) -> Void) {
-        TVNCWidgetSharedState.markInstalledIfNeeded()
+        TVNCWidgetSharedState.refreshInstallState(isPreview: context.isPreview)
         completion(TVNCWidgetEntry(date: Date()))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<TVNCWidgetEntry>) -> Void) {
-        TVNCWidgetSharedState.markInstalledIfNeeded()
+        TVNCWidgetSharedState.refreshInstallState(isPreview: context.isPreview)
 
         let currentDate = Date()
         let entry = TVNCWidgetEntry(date: currentDate)
@@ -56,6 +70,7 @@ private struct TVNCWidgetProvider: TimelineProvider {
         let timeline = Timeline(entries: [entry], policy: .after(nextRefresh))
         completion(timeline)
     }
+
 }
 
 private struct TVNCWidgetEntryView: View {
@@ -70,7 +85,7 @@ private struct TVNCWidgetEntryView: View {
                 .font(.subheadline)
                 .foregroundColor(.primary)
 
-            Text("Background refresh will try to launch TrollVNC.")
+            Text("Tap the widget to open TrollVNC.")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -101,7 +116,7 @@ private struct TVNCStatusWidget: Widget {
             }
         }
         .configurationDisplayName("TrollVNC")
-        .description("After the widget is added, background refresh can try to launch TrollVNC.")
+        .description("Open TrollVNC from the Home Screen with a single tap.")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }

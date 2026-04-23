@@ -28,7 +28,6 @@ FOUNDATION_EXPORT NSNotificationName const TVNCServiceStatusDidChangeNotificatio
 + (instancetype)sharedCoordinator;
 - (void)registerServiceMonitor;
 - (void)ensureServiceRunning;
-- (void)requestWidgetBootstrapLaunchIfNeeded;
 
 @end
 

@@ -151,7 +151,6 @@ static NSTimeInterval const TVNCWidgetBootstrapEarliestDelay = 5.0 * 60.0;
 
     if ([TRWidgetBootstrapState hasPendingWidgetBootstrap]) {
         [[TVNCServiceCoordinator sharedCoordinator] ensureServiceRunning];
-        [[TVNCServiceCoordinator sharedCoordinator] requestWidgetBootstrapLaunchIfNeeded];
         [TRWidgetBootstrapState recordBootstrapAttempt];
         [TRWidgetBootstrapState clearPendingWidgetBootstrap];
         finishTask(YES);
