@@ -43,6 +43,8 @@
 		61C756C62E65BDAC00B2B371 /* TVNCServiceCoordinator.m in Sources */ = {isa = PBXBuildFile; fileRef = 61C756B42E65BDAC00B2B371 /* TVNCServiceCoordinator.m */; };
 		61C756C72E65BDAC00B2B371 /* TVNCViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 61C756B62E65BDAC00B2B371 /* TVNCViewController.m */; };
 		61C756CE2E65BE6F00B2B371 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 61C756CD2E65BE6F00B2B371 /* LaunchScreen.storyboard */; };
+		A10000012F2A000100000105 /* TRWidgetBootstrapState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F2A000100000007 /* TRWidgetBootstrapState.swift */; };
+		A10000012F2A000100000106 /* TRWidgetBootstrapState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000012F2A000100000007 /* TRWidgetBootstrapState.swift */; };
 		CC17D9BA2EC79DA1005C275A /* ZTSelfSignedCertificate.m in Sources */ = {isa = PBXBuildFile; fileRef = CC17D9B92EC79DA1005C275A /* ZTSelfSignedCertificate.m */; };
 		CC17D9BB2EC79DA1005C275A /* ZTSelfSignedCertificate.m in Sources */ = {isa = PBXBuildFile; fileRef = CC17D9B92EC79DA1005C275A /* ZTSelfSignedCertificate.m */; };
 		CC1BF93E2F101B2F00111D96 /* SpringBoardServices.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = CC1BF93D2F101B2F00111D96 /* SpringBoardServices.tbd */; };
@@ -135,6 +137,7 @@
 		A10000012F2A000100000004 /* TrollVNCWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TrollVNCWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000012F2A000100000005 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		A10000012F2A000100000006 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		A10000012F2A000100000007 /* TRWidgetBootstrapState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TRWidgetBootstrapState.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -241,6 +244,7 @@
 				61C756AB2E65BDAC00B2B371 /* StripedTextTableViewController.h */,
 				61C756AC2E65BDAC00B2B371 /* StripedTextTableViewController.m */,
 				61C756AD2E65BDAC00B2B371 /* TaskProcess+ObjC.swift */,
+				A10000012F2A000100000007 /* TRWidgetBootstrapState.swift */,
 				CC91EF912E6CA6C5002F5B2A /* TVNCClientCell.h */,
 				CC91EF922E6CA6C5002F5B2A /* TVNCClientCell.m */,
 				CC91EF8E2E6C2208002F5B2A /* TVNCClientListController.h */,
@@ -480,6 +484,7 @@
 				CC8061802E74967500B1AA3E /* DpkgVersion.m in Sources */,
 				61C756C22E65BDAC00B2B371 /* StripedTextTableViewController.m in Sources */,
 				61C756C32E65BDAC00B2B371 /* TaskProcess+ObjC.swift in Sources */,
+				A10000012F2A000100000105 /* TRWidgetBootstrapState.swift in Sources */,
 				61C756C42E65BDAC00B2B371 /* TVNCHotspotManager.m in Sources */,
 				CC17D9BB2EC79DA1005C275A /* ZTSelfSignedCertificate.m in Sources */,
 				61C756C52E65BDAC00B2B371 /* TVNCRootListController.m in Sources */,
@@ -503,6 +508,7 @@
 				615401B52EB1180C009FDD6F /* DpkgVersion.m in Sources */,
 				615401B62EB1180C009FDD6F /* StripedTextTableViewController.m in Sources */,
 				615401B72EB1180C009FDD6F /* TaskProcess+ObjC.swift in Sources */,
+				A10000012F2A000100000106 /* TRWidgetBootstrapState.swift in Sources */,
 				615401B82EB1180C009FDD6F /* TVNCHotspotManager.m in Sources */,
 				CC17D9BA2EC79DA1005C275A /* ZTSelfSignedCertificate.m in Sources */,
 				615401B92EB1180C009FDD6F /* TVNCRootListController.m in Sources */,
