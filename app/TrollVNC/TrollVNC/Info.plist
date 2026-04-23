@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.82flex.TrollVNCApp.widget-refresh</string>
+	</array>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_rfb._tcp</string>
@@ -30,6 +34,7 @@
 	</dict>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>fetch</string>
 		<string>network-authentication</string>
 	</array>
 </dict>

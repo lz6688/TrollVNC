@@ -20,6 +20,7 @@
 
 #import <Foundation/Foundation.h>
 #import <MobileCoreServices/LSApplicationProxy.h>
+#import <UIKit/UIKit.h>
 #import <arpa/inet.h>
 #import <netinet/in.h>
 #import <sys/socket.h>
@@ -33,6 +34,9 @@ FOUNDATION_EXPORT
 int SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions(CFStringRef bundleIdentifier, CFURLRef url,
                                                              CFDictionaryRef appOptions, CFDictionaryRef launchOptions,
                                                              BOOL suspended);
+
+static NSString *const TVNCWidgetBootstrapLaunchTimestampKey = @"LastWidgetBootstrapLaunch";
+static NSTimeInterval const TVNCWidgetBootstrapLaunchCooldown = 10.0 * 60.0;
 
 @interface TVNCServiceCoordinator ()
 @property(nonatomic, strong) NSTimer *checkTimer;
@@ -125,6 +129,44 @@ int SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions(CFStringRef bundleI
         _serviceRunning = running;
         [[NSNotificationCenter defaultCenter] postNotificationName:TVNCServiceStatusDidChangeNotification object:self];
     }
+}
+
+- (void)requestWidgetBootstrapLaunchIfNeeded {
+#if !TARGET_IPHONE_SIMULATOR
+    __block UIApplicationState appState = UIApplicationStateInactive;
+    void (^readAppState)(void) = ^{
+        appState = UIApplication.sharedApplication.applicationState;
+    };
+    if ([NSThread isMainThread]) {
+        readAppState();
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), readAppState);
+    }
+
+    if (appState == UIApplicationStateActive) {
+        return;
+    }
+
+    NSDate *lastLaunch = [_userDefaults objectForKey:TVNCWidgetBootstrapLaunchTimestampKey];
+    if (lastLaunch && [[NSDate date] timeIntervalSinceDate:lastLaunch] < TVNCWidgetBootstrapLaunchCooldown) {
+        return;
+    }
+
+    NSString *appId = [[NSBundle mainBundle] bundleIdentifier];
+    if (appId.length == 0) {
+        return;
+    }
+
+    UInt32 result = SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions(
+        (__bridge CFStringRef)appId, NULL, NULL,
+        (__bridge CFDictionaryRef) @{SBSApplicationLaunchOptionUnlockDeviceKey : @YES}, NO);
+
+    if (result == 0) {
+        NSDate *now = [NSDate date];
+        [_userDefaults setObject:now forKey:TVNCWidgetBootstrapLaunchTimestampKey];
+        [_userDefaults synchronize];
+    }
+#endif
 }
 
 - (BOOL)_isServiceRunning {

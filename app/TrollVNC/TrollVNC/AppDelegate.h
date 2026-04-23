@@ -19,4 +19,6 @@
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 
+- (void)scheduleWidgetBootstrapRefreshIfNeeded;
+
 @end
