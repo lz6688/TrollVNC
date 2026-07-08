@@ -21,6 +21,34 @@
                ReferencedContainer = "container:TrollVNC.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "CD7A00012F20000100000018"
+               BuildableName = "TrollVNCAutostartWidget.appex"
+               BlueprintName = "TrollVNCAutostartWidget"
+               ReferencedContainer = "container:TrollVNC.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "CD7A00012F20000100000019"
+               BuildableName = "libTrollVNCWidgetHelper.dylib"
+               BlueprintName = "TrollVNCWidgetHelper"
+               ReferencedContainer = "container:TrollVNC.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
