@@ -25,7 +25,6 @@ private struct TrollVNCWidgetEntry: TimelineEntry {
 
 private struct TrollVNCWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> TrollVNCWidgetEntry {
-        TVNCServiceLauncher.log("widget placeholder")
         return TrollVNCWidgetEntry(date: Date(), serviceRunning: false)
     }
 
@@ -50,7 +49,6 @@ private struct TrollVNCWidgetEntryView: View {
     let entry: TrollVNCWidgetEntry
 
     var body: some View {
-        let _ = TVNCServiceLauncher.log("widget body render running=\(entry.serviceRunning)")
         if #available(iOSApplicationExtension 17.0, *) {
             content
                 .containerBackground(Color(.systemBackground), for: .widget)
