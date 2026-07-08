@@ -8,6 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		615360AA2E65BEFD00643E64 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 615360A92E65BEFD00643E64 /* Main.storyboard */; };
+		CC2A00012F1A000000000020 /* TVNCServiceLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2A00012F1A000000000001 /* TVNCServiceLauncher.swift */; };
+		CC2A00012F1A000000000021 /* TVNCServiceLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2A00012F1A000000000001 /* TVNCServiceLauncher.swift */; };
+		CC2A00012F1A000000000022 /* TVNCServiceLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2A00012F1A000000000001 /* TVNCServiceLauncher.swift */; };
+		CC2A00012F1A000000000023 /* TrollVNCWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2A00012F1A000000000002 /* TrollVNCWidget.swift */; };
+		CC2A00012F1A000000000024 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC2A00012F1A000000000005 /* WidgetKit.framework */; };
+		CC2A00012F1A000000000025 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC2A00012F1A000000000006 /* SwiftUI.framework */; };
+		CC2A00012F1A000000000026 /* TrollVNCWidget.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = CC2A00012F1A000000000004 /* TrollVNCWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		615401B02EB1180C009FDD6F /* TVNCClientCell.m in Sources */ = {isa = PBXBuildFile; fileRef = CC91EF922E6CA6C5002F5B2A /* TVNCClientCell.m */; };
 		615401B12EB1180C009FDD6F /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 61C7569A2E65BDAC00B2B371 /* AppDelegate.m */; };
 		615401B22EB1180C009FDD6F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 61C756A22E65BDAC00B2B371 /* main.m */; };
@@ -53,8 +60,38 @@
 		CC91EF972E6EF165002F5B2A /* TVNCListItemsController.m in Sources */ = {isa = PBXBuildFile; fileRef = CC91EF962E6EF165002F5B2A /* TVNCListItemsController.m */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		CC2A00012F1A000000000045 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 61535F4F2E6590A100643E64 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CC2A00012F1A000000000040;
+			remoteInfo = TrollVNCWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		CC2A00012F1A000000000033 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				CC2A00012F1A000000000026 /* TrollVNCWidget.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		61535F572E6590A100643E64 /* TrollVNC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TrollVNC.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC2A00012F1A000000000001 /* TVNCServiceLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVNCServiceLauncher.swift; sourceTree = "<group>"; };
+		CC2A00012F1A000000000002 /* TrollVNCWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrollVNCWidget.swift; sourceTree = "<group>"; };
+		CC2A00012F1A000000000003 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		CC2A00012F1A000000000004 /* TrollVNCWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TrollVNCWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC2A00012F1A000000000005 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		CC2A00012F1A000000000006 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		615360A82E65BEFD00643E64 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		615360AC2E65BF0000643E64 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Main.strings; sourceTree = "<group>"; };
 		615360AE2E65BF0000643E64 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
@@ -124,6 +161,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CC2A00012F1A000000000031 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC2A00012F1A000000000024 /* WidgetKit.framework in Frameworks */,
+				CC2A00012F1A000000000025 /* SwiftUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -131,6 +177,7 @@
 			isa = PBXGroup;
 			children = (
 				61C756B72E65BDAC00B2B371 /* TrollVNC */,
+				CC2A00012F1A000000000010 /* TrollVNCWidget */,
 				61C756652E65B72E00B2B371 /* Frameworks */,
 				61535F582E6590A100643E64 /* Products */,
 			);
@@ -140,6 +187,7 @@
 			isa = PBXGroup;
 			children = (
 				61535F572E6590A100643E64 /* TrollVNC.app */,
+				CC2A00012F1A000000000004 /* TrollVNCWidget.appex */,
 				615401CA2EB1180C009FDD6F /* TrollVNC.app */,
 			);
 			name = Products;
@@ -170,10 +218,21 @@
 		61C756652E65B72E00B2B371 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				CC2A00012F1A000000000006 /* SwiftUI.framework */,
+				CC2A00012F1A000000000005 /* WidgetKit.framework */,
 				615EFE9E2F1602D700187EAF /* CoreServices.framework */,
 				61C756662E65B72E00B2B371 /* NetworkExtension.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		CC2A00012F1A000000000010 /* TrollVNCWidget */ = {
+			isa = PBXGroup;
+			children = (
+				CC2A00012F1A000000000003 /* Info.plist */,
+				CC2A00012F1A000000000002 /* TrollVNCWidget.swift */,
+			);
+			path = TrollVNCWidget;
 			sourceTree = "<group>";
 		};
 		61C756B72E65BDAC00B2B371 /* TrollVNC */ = {
@@ -206,6 +265,7 @@
 				61C756B22E65BDAC00B2B371 /* TVNCRootListController.m */,
 				61C756B32E65BDAC00B2B371 /* TVNCServiceCoordinator.h */,
 				61C756B42E65BDAC00B2B371 /* TVNCServiceCoordinator.m */,
+				CC2A00012F1A000000000001 /* TVNCServiceLauncher.swift */,
 				61B0DD062EB13BEF004CC42B /* TVNCSliderCell.h */,
 				61B0DD072EB13BEF004CC42B /* TVNCSliderCell.m */,
 				61C756B52E65BDAC00B2B371 /* TVNCViewController.h */,
@@ -226,11 +286,13 @@
 				61535F532E6590A100643E64 /* Sources */,
 				61535F542E6590A100643E64 /* Frameworks */,
 				61535F552E6590A100643E64 /* Resources */,
+				CC2A00012F1A000000000033 /* Embed App Extensions */,
 				61535F7E2E6591FF00643E64 /* Pseudo Sign */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				CC2A00012F1A000000000044 /* PBXTargetDependency */,
 			);
 			name = TrollVNC;
 			packageProductDependencies = (
@@ -259,6 +321,26 @@
 			productReference = 615401CA2EB1180C009FDD6F /* TrollVNC.app */;
 			productType = "com.apple.product-type.application";
 		};
+		CC2A00012F1A000000000040 /* TrollVNCWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CC2A00012F1A000000000041 /* Build configuration list for PBXNativeTarget "TrollVNCWidget" */;
+			buildPhases = (
+				CC2A00012F1A000000000030 /* Sources */,
+				CC2A00012F1A000000000031 /* Frameworks */,
+				CC2A00012F1A000000000032 /* Resources */,
+				CC2A00012F1A000000000034 /* Pseudo Sign */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TrollVNCWidget;
+			packageProductDependencies = (
+			);
+			productName = TrollVNCWidget;
+			productReference = CC2A00012F1A000000000004 /* TrollVNCWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -269,6 +351,9 @@
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					61535F562E6590A100643E64 = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					CC2A00012F1A000000000040 = {
 						CreatedOnToolsVersion = 16.4;
 					};
 				};
@@ -289,6 +374,7 @@
 			projectRoot = "";
 			targets = (
 				61535F562E6590A100643E64 /* TrollVNC */,
+				CC2A00012F1A000000000040 /* TrollVNCWidget */,
 				615401AE2EB1180C009FDD6F /* TrollVNC.Sim */,
 			);
 		};
@@ -312,6 +398,13 @@
 				615401C32EB1180C009FDD6F /* Main.storyboard in Resources */,
 				615401C42EB1180C009FDD6F /* LaunchScreen.storyboard in Resources */,
 				615401C52EB1180C009FDD6F /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC2A00012F1A000000000032 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -356,6 +449,25 @@
 			shellPath = /bin/zsh;
 			shellScript = "PATH=\"/opt/homebrew/bin:$THEOS/bin:$PATH\"\nPROJECT_BASE=\"$PROJECT_DIR/../..\"\nPACKAGE_VERSION=$(grep 'PACKAGE_VERSION' \"$PROJECT_BASE/Makefile\" | cut -d' ' -f4)\nTHEOS_STAGING_DIR=\"$PROJECT_BASE/.theos/_\"\nPRODUCT_DIR=\"$BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME\"\n\n# Set version information\nGIT_COMMIT_COUNT=$(git rev-list --count HEAD)\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $GIT_COMMIT_COUNT\" \"$PRODUCT_DIR/Info.plist\"\n/usr/libexec/PlistBuddy -c \"Set :CFBundleShortVersionString $PACKAGE_VERSION\" \"$PRODUCT_DIR/Info.plist\"\n\n# Collect executables\n# cp -rp \"$THEOS_STAGING_DIR/usr/bin/trollvncserver\" \"$PRODUCT_DIR\"\n# cp -rp \"$THEOS_STAGING_DIR/usr/bin/trollvncmanager\" \"$PRODUCT_DIR\"\n\n# Collect bundle resources\ncp -rp \"$THEOS_STAGING_DIR/Library/PreferenceBundles/TrollVNCPrefs.bundle\" \"$PRODUCT_DIR\"\nrm -f \"$PRODUCT_DIR/TrollVNCPrefs.bundle/TrollVNCPrefs\"\ncp -rp \"$THEOS_STAGING_DIR/usr/share/trollvnc/webclients\" \"$PRODUCT_DIR\"\n";
 		};
+		CC2A00012F1A000000000034 /* Pseudo Sign */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Pseudo Sign";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/zsh;
+			shellScript = "PATH=\"/opt/homebrew/bin:$THEOS/bin:$PATH\"\nif ! command -v ldid &>/dev/null; then\n    echo \"[!] ldid not found, run: brew install ldid-procursus\"\n    exit 1\nfi\nif [ \"$CODE_SIGNING_ALLOWED\" = \"NO\" ]; then\n    ldid -S${CODE_SIGN_ENTITLEMENTS} ${CODESIGNING_FOLDER_PATH}\nfi\n";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -367,6 +479,7 @@
 				61C756BF2E65BDAC00B2B371 /* AppDelegate.m in Sources */,
 				61C756C02E65BDAC00B2B371 /* main.m in Sources */,
 				61C756C12E65BDAC00B2B371 /* SceneDelegate.m in Sources */,
+				CC2A00012F1A000000000020 /* TVNCServiceLauncher.swift in Sources */,
 				CC80617F2E74967500B1AA3E /* GitHubReleaseUpdater.m in Sources */,
 				CC8061802E74967500B1AA3E /* DpkgVersion.m in Sources */,
 				61C756C22E65BDAC00B2B371 /* StripedTextTableViewController.m in Sources */,
@@ -390,6 +503,7 @@
 				615401B12EB1180C009FDD6F /* AppDelegate.m in Sources */,
 				615401B22EB1180C009FDD6F /* main.m in Sources */,
 				615401B32EB1180C009FDD6F /* SceneDelegate.m in Sources */,
+				CC2A00012F1A000000000021 /* TVNCServiceLauncher.swift in Sources */,
 				615401B42EB1180C009FDD6F /* GitHubReleaseUpdater.m in Sources */,
 				615401B52EB1180C009FDD6F /* DpkgVersion.m in Sources */,
 				615401B62EB1180C009FDD6F /* StripedTextTableViewController.m in Sources */,
@@ -405,7 +519,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CC2A00012F1A000000000030 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC2A00012F1A000000000022 /* TVNCServiceLauncher.swift in Sources */,
+				CC2A00012F1A000000000023 /* TrollVNCWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CC2A00012F1A000000000044 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CC2A00012F1A000000000040 /* TrollVNCWidget */;
+			targetProxy = CC2A00012F1A000000000045 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		615360A92E65BEFD00643E64 /* Main.storyboard */ = {
@@ -446,8 +577,8 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"THEBOOTSTRAP=1",
-					"THEOS_PACKAGE_SCHEME=\\\"bootstrap\\\"",
-					"PACKAGE_VERSION=\\\"1.0\\\"",
+					"THEOS_PACKAGE_SCHEME=\"bootstrap\"",
+					"PACKAGE_VERSION=\"1.0\"",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TrollVNC/Info.plist;
@@ -499,8 +630,8 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"THEBOOTSTRAP=1",
-					"THEOS_PACKAGE_SCHEME=\\\"bootstrap\\\"",
-					"PACKAGE_VERSION=\\\"1.0\\\"",
+					"THEOS_PACKAGE_SCHEME=\"bootstrap\"",
+					"PACKAGE_VERSION=\"1.0\"",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TrollVNC/Info.plist;
@@ -674,8 +805,8 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"THEBOOTSTRAP=1",
-					"THEOS_PACKAGE_SCHEME=\\\"bootstrap\\\"",
-					"PACKAGE_VERSION=\\\"1.0\\\"",
+					"THEOS_PACKAGE_SCHEME=\"bootstrap\"",
+					"PACKAGE_VERSION=\"1.0\"",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TrollVNC/Info.plist;
@@ -727,8 +858,8 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"THEBOOTSTRAP=1",
-					"THEOS_PACKAGE_SCHEME=\\\"bootstrap\\\"",
-					"PACKAGE_VERSION=\\\"1.0\\\"",
+					"THEOS_PACKAGE_SCHEME=\"bootstrap\"",
+					"PACKAGE_VERSION=\"1.0\"",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TrollVNC/Info.plist;
@@ -766,6 +897,71 @@
 			};
 			name = Release;
 		};
+		CC2A00012F1A000000000042 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_ENTITLEMENTS = TrollVNC/TrollVNC.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TrollVNCWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TrollVNC;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.82flex.TrollVNCApp.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CC2A00012F1A000000000043 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_ENTITLEMENTS = TrollVNC/TrollVNC.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TrollVNCWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TrollVNC;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.82flex.TrollVNCApp.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -792,6 +988,15 @@
 			buildConfigurations = (
 				615401C82EB1180C009FDD6F /* Debug */,
 				615401C92EB1180C009FDD6F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CC2A00012F1A000000000041 /* Build configuration list for PBXNativeTarget "TrollVNCWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CC2A00012F1A000000000042 /* Debug */,
+				CC2A00012F1A000000000043 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

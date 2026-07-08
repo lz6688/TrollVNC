@@ -31,4 +31,7 @@ rm -rf "${THEOS_STAGING_DIR:?}/usr"
 rm -rf "${THEOS_STAGING_DIR:?}/Library"
 
 # Pseudo code signing
+if [ -d "$THEOS_STAGING_DIR/Applications/TrollVNC.app/PlugIns/TrollVNCWidget.appex" ]; then
+    ldid -Sapp/TrollVNC/TrollVNC/TrollVNC.entitlements "$THEOS_STAGING_DIR/Applications/TrollVNC.app/PlugIns/TrollVNCWidget.appex"
+fi
 ldid -Sapp/TrollVNC/TrollVNC/TrollVNC.entitlements "$THEOS_STAGING_DIR/Applications/TrollVNC.app"
