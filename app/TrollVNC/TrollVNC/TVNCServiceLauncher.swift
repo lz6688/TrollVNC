@@ -42,20 +42,31 @@ private let posixSpawnPersonaFlagsOverride = UInt32(1)
 @objcMembers
 public final class TVNCServiceLauncher: NSObject {
     private static let alivePort: UInt16 = 46751
+    private static let logDirectoryPath = "/var/mobile/Media/TrollVNC"
+    private static let logFilePath = "/var/mobile/Media/TrollVNC/widget-launch.log"
+    private static let logLock = NSLock()
+    private static let maxLogFileSize: UInt64 = 512 * 1024
 
     public static func ensureServiceRunning() -> Bool {
+        log("ensureServiceRunning begin")
         if isServiceRunning() {
+            log("ensureServiceRunning already running")
             return true
         }
-        return spawnService()
+        let spawned = spawnService()
+        log("ensureServiceRunning spawn result=\(spawned)")
+        return spawned
     }
 
     public static func isServiceRunning() -> Bool {
         #if targetEnvironment(simulator)
+        log("isServiceRunning simulator -> true")
         return true
         #else
         let sockfd = socket(AF_INET, SOCK_STREAM, 0)
         if sockfd < 0 {
+            let socketErrno = errno
+            log("isServiceRunning socket failed errno=\(socketErrno) \(errnoDescription(socketErrno))")
             return false
         }
         defer { close(sockfd) }
@@ -71,36 +82,54 @@ public final class TVNCServiceLauncher: NSObject {
                 connect(sockfd, sockaddrPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
             }
         }
-        return result == 0
+        let running = result == 0
+        if running {
+            log("isServiceRunning connect 127.0.0.1:\(alivePort) -> true")
+        } else {
+            let connectErrno = errno
+            log("isServiceRunning connect 127.0.0.1:\(alivePort) -> false errno=\(connectErrno) \(errnoDescription(connectErrno))")
+        }
+        return running
         #endif
     }
 
     public static func spawnService() -> Bool {
         #if targetEnvironment(simulator)
+        log("spawnService simulator -> true")
         return true
         #else
+        log("spawnService begin uid=\(getuid()) euid=\(geteuid()) gid=\(getgid()) egid=\(getegid()) bundle=\(Bundle.main.bundleIdentifier ?? "nil") bundleURL=\(Bundle.main.bundleURL.path)")
         guard let appBundleURL = hostAppBundleURL() else {
+            log("spawnService failed: host app bundle not found")
             return false
         }
+        log("spawnService hostAppBundleURL=\(appBundleURL.path)")
 
         let managerURL = appBundleURL.appendingPathComponent("trollvncmanager", isDirectory: false)
         let managerPath = managerURL.path
         guard FileManager.default.isExecutableFile(atPath: managerPath) else {
+            let exists = FileManager.default.fileExists(atPath: managerPath)
+            log("spawnService failed: manager not executable exists=\(exists) path=\(managerPath)")
             return false
         }
+        log("spawnService manager executable path=\(managerPath)")
 
         var spawnAttrs: posix_spawnattr_t?
-        guard posix_spawnattr_init(&spawnAttrs) == 0 else {
+        let attrInitResult = posix_spawnattr_init(&spawnAttrs)
+        guard attrInitResult == 0 else {
+            log("spawnService failed: posix_spawnattr_init result=\(attrInitResult) \(errnoDescription(attrInitResult))")
             return false
         }
         defer { posix_spawnattr_destroy(&spawnAttrs) }
 
-        _ = posix_spawnattr_set_persona_np(&spawnAttrs, 99, posixSpawnPersonaFlagsOverride)
-        _ = posix_spawnattr_set_persona_uid_np(&spawnAttrs, 0)
-        _ = posix_spawnattr_set_persona_gid_np(&spawnAttrs, 0)
+        let personaResult = posix_spawnattr_set_persona_np(&spawnAttrs, 99, posixSpawnPersonaFlagsOverride)
+        let personaUIDResult = posix_spawnattr_set_persona_uid_np(&spawnAttrs, 0)
+        let personaGIDResult = posix_spawnattr_set_persona_gid_np(&spawnAttrs, 0)
+        log("spawnService persona results persona=\(personaResult) uid=\(personaUIDResult) gid=\(personaGIDResult)")
 
         let oldDirectoryPath = FileManager.default.currentDirectoryPath
-        _ = FileManager.default.changeCurrentDirectoryPath(appBundleURL.path)
+        let changedDirectory = FileManager.default.changeCurrentDirectoryPath(appBundleURL.path)
+        log("spawnService chdir \(appBundleURL.path) result=\(changedDirectory)")
         defer { _ = FileManager.default.changeCurrentDirectoryPath(oldDirectoryPath) }
 
         let argvStrings = [managerPath]
@@ -108,6 +137,7 @@ public final class TVNCServiceLauncher: NSObject {
             let item = "\(key)=\(value)"
             return item.utf8.contains(0) ? nil : item
         }
+        log("spawnService argv=\(argvStrings) envCount=\(envStrings.count)")
 
         return withCStringArray(argvStrings) { argv in
             withCStringArray(envStrings) { envp in
@@ -116,11 +146,13 @@ public final class TVNCServiceLauncher: NSObject {
                     posix_spawn(&pid, path, nil, &spawnAttrs, argv, envp)
                 }
                 if result != 0 {
+                    log("spawnService posix_spawn failed result=\(result) \(errnoDescription(result)) pid=\(pid)")
                     return false
                 }
 
                 var status: Int32 = 0
-                _ = waitpid(pid, &status, WNOHANG)
+                let waitResult = waitpid(pid, &status, WNOHANG)
+                log("spawnService posix_spawn success pid=\(pid) waitpid=\(waitResult) status=\(status)")
                 return true
             }
         }
@@ -131,19 +163,65 @@ public final class TVNCServiceLauncher: NSObject {
         hostAppBundleURL()?.appendingPathComponent("trollvncmanager", isDirectory: false).path
     }
 
+    public static func debugLogPath() -> String {
+        logFilePath
+    }
+
+    public static func log(_ message: String) {
+        logLock.lock()
+        defer { logLock.unlock() }
+
+        let manager = FileManager.default
+        do {
+            try manager.createDirectory(
+                atPath: logDirectoryPath,
+                withIntermediateDirectories: true,
+                attributes: [.protectionKey: FileProtectionType.none]
+            )
+
+            if let attributes = try? manager.attributesOfItem(atPath: logFilePath),
+               let fileSize = attributes[.size] as? NSNumber,
+               fileSize.uint64Value > maxLogFileSize {
+                try? manager.removeItem(atPath: logFilePath)
+            }
+
+            if !manager.fileExists(atPath: logFilePath) {
+                _ = manager.createFile(atPath: logFilePath, contents: nil, attributes: [.protectionKey: FileProtectionType.none])
+            } else {
+                try? manager.setAttributes([.protectionKey: FileProtectionType.none], ofItemAtPath: logFilePath)
+            }
+
+            let line = "\(logTimestamp()) [\(ProcessInfo.processInfo.processName):\(getpid())] \(message)\n"
+            guard let data = line.data(using: .utf8),
+                  let handle = FileHandle(forWritingAtPath: logFilePath) else {
+                return
+            }
+            defer { try? handle.close() }
+            try handle.seekToEnd()
+            try handle.write(contentsOf: data)
+        } catch {
+            return
+        }
+    }
+
     private static func hostAppBundleURL() -> URL? {
         var url = Bundle.main.bundleURL
+        log("hostAppBundleURL start=\(url.path)")
 
         while !url.path.isEmpty && url.path != "/" {
             if url.pathExtension == "app" {
+                log("hostAppBundleURL found app=\(url.path)")
                 return url
             }
+            log("hostAppBundleURL walk url=\(url.path)")
             url.deleteLastPathComponent()
         }
 
-        return Bundle.main.path(forResource: "trollvncmanager", ofType: nil).map {
+        let fallback = Bundle.main.path(forResource: "trollvncmanager", ofType: nil).map {
             URL(fileURLWithPath: $0).deletingLastPathComponent()
         }
+        log("hostAppBundleURL fallback=\(fallback?.path ?? "nil")")
+        return fallback
     }
 
     private static func taskEnvironment() -> [String: String] {
@@ -172,5 +250,23 @@ public final class TVNCServiceLauncher: NSObject {
         return pointers.withUnsafeMutableBufferPointer { buffer in
             body(buffer.baseAddress!)
         }
+    }
+
+    private static func errnoDescription(_ code: Int32) -> String {
+        String(cString: strerror(code))
+    }
+
+    private static func logTimestamp() -> String {
+        var timeval = timeval()
+        gettimeofday(&timeval, nil)
+
+        var localTime = time_t(timeval.tv_sec)
+        var tmValue = tm()
+        localtime_r(&localTime, &tmValue)
+
+        var buffer = [CChar](repeating: 0, count: 32)
+        strftime(&buffer, buffer.count, "%Y-%m-%d %H:%M:%S", &tmValue)
+        let seconds = String(cString: buffer)
+        return String(format: "%@.%03d", seconds, Int(timeval.tv_usec / 1000))
     }
 }

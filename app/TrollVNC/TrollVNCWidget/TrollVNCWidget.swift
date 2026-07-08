@@ -25,18 +25,23 @@ private struct TrollVNCWidgetEntry: TimelineEntry {
 
 private struct TrollVNCWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> TrollVNCWidgetEntry {
-        TrollVNCWidgetEntry(date: Date(), serviceRunning: false)
+        TVNCServiceLauncher.log("widget placeholder")
+        return TrollVNCWidgetEntry(date: Date(), serviceRunning: false)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (TrollVNCWidgetEntry) -> Void) {
+        TVNCServiceLauncher.log("widget getSnapshot begin isPreview=\(context.isPreview) logPath=\(TVNCServiceLauncher.debugLogPath())")
         let running = context.isPreview ? TVNCServiceLauncher.isServiceRunning() : TVNCServiceLauncher.ensureServiceRunning()
+        TVNCServiceLauncher.log("widget getSnapshot complete running=\(running)")
         completion(TrollVNCWidgetEntry(date: Date(), serviceRunning: running))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<TrollVNCWidgetEntry>) -> Void) {
+        TVNCServiceLauncher.log("widget getTimeline begin isPreview=\(context.isPreview) logPath=\(TVNCServiceLauncher.debugLogPath())")
         let running = TVNCServiceLauncher.ensureServiceRunning()
         let entry = TrollVNCWidgetEntry(date: Date(), serviceRunning: running)
         let nextRefresh = Calendar.current.date(byAdding: .minute, value: 15, to: entry.date) ?? entry.date.addingTimeInterval(900)
+        TVNCServiceLauncher.log("widget getTimeline complete running=\(running) nextRefresh=\(nextRefresh)")
         completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
     }
 }
@@ -45,6 +50,7 @@ private struct TrollVNCWidgetEntryView: View {
     let entry: TrollVNCWidgetEntry
 
     var body: some View {
+        let _ = TVNCServiceLauncher.log("widget body render running=\(entry.serviceRunning)")
         if #available(iOSApplicationExtension 17.0, *) {
             content
                 .containerBackground(Color(.systemBackground), for: .widget)
