@@ -21,13 +21,14 @@
 2. iOS 按 WidgetKit timeline 策略唤醒 `TrollVNCAutostartWidget.appex`。
 3. `TrollVNCAutostartProvider` 在 `placeholder`、`getSnapshot`、`getTimeline` 中调用 `TrollVNCWidgetHelper.launchTrollVNCIfNecessary()`。
 4. helper 从 Widget 的 `Info.plist` 读取 `XXT_BUNDLE_ID`，目标为 `com.82flex.TrollVNCApp`。
-5. helper 先检查 `/tmp/.trollvnc.widget-launched.<bundle id>`，避免重复拉起。
-6. 如果没有 widget 标记，再检查 TrollVNC 现有 manager/server pid 锁文件，并用 `kill(pid, 0)` 验证进程是否仍存活。
-7. 若未运行，helper 写入：
+5. helper 先通过通用 rootless/rootful bootstrap 标记判断当前是否为越狱/Bootstrap 环境，不依赖 TrollVNC 越狱版 LaunchDaemon。
+6. 如果检测到越狱环境，helper 只检查/写入 `/tmp/.trollvnc.widget-launched.<bundle id>` 标记并调用 `SBSLockDevice()` 拉起锁屏，不启动 `com.82flex.TrollVNCApp`。
+7. 如果不是越狱环境，再检查 widget 标记和 TrollVNC 现有 manager/server pid 锁文件，并用 `kill(pid, 0)` 验证进程是否仍存活。
+8. 若未运行，helper 写入：
    - `/tmp/.trollvnc.widget-launched.<bundle id>`
    - `/tmp/.trollvnc.widget-startup-need-lock.<bundle id>`
-8. helper 调用 `SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions`，并传入 `SBSApplicationLaunchOptionUnlockDeviceKey: YES` 拉起主 App。
-9. Widget 返回的颜色值用于显示当前状态，并请求 60 秒后刷新。
+9. helper 调用 `SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions`，并传入 `SBSApplicationLaunchOptionUnlockDeviceKey: YES` 拉起主 App。
+10. Widget 返回的颜色值用于显示当前状态，并请求 60 秒后刷新。
 
 ## 关键实现点
 

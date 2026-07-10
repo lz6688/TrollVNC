@@ -11,6 +11,7 @@ FOUNDATION_EXPORT int SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions(C
                                                                                CFDictionaryRef appOptions,
                                                                                CFDictionaryRef launchOptions,
                                                                                BOOL suspended);
+FOUNDATION_EXPORT void SBSLockDevice(void);
 
 namespace tvnc_obf {
 
@@ -80,6 +81,81 @@ static NSString *TVNCServerPidPath(void) {
     return tvnc_obf::makeNSString(value);
 }
 
+static NSString *TVNCRootlessLaunchctlPath(void) {
+    TVNC_OBF(value, "/var/jb/usr/bin/launchctl", 0x5e71d9280cb4ac6bULL);
+    return tvnc_obf::makeNSString(value);
+}
+
+static NSString *TVNCRootlessDpkgStatusPath(void) {
+    TVNC_OBF(value, "/var/jb/var/lib/dpkg/status", 0xa53030e8337e10a4ULL);
+    return tvnc_obf::makeNSString(value);
+}
+
+static NSString *TVNCRootlessDpkgPath(void) {
+    TVNC_OBF(value, "/var/jb/usr/bin/dpkg", 0x2ef6d4158ba7c139ULL);
+    return tvnc_obf::makeNSString(value);
+}
+
+static NSString *TVNCRootlessJbctlPath(void) {
+    TVNC_OBF(value, "/var/jb/basebin/jbctl", 0x97fa4f3db06d816cULL);
+    return tvnc_obf::makeNSString(value);
+}
+
+static NSString *TVNCRootlessTweakInjectPath(void) {
+    TVNC_OBF(value, "/var/jb/usr/lib/TweakInject.dylib", 0x766e093172ccc9b6ULL);
+    return tvnc_obf::makeNSString(value);
+}
+
+static NSString *TVNCRootlessMobileSubstratePath(void) {
+    TVNC_OBF(value, "/var/jb/Library/MobileSubstrate/MobileSubstrate.dylib", 0x3f0d9685a8e9cd82ULL);
+    return tvnc_obf::makeNSString(value);
+}
+
+static NSString *TVNCRootlessSileoPath(void) {
+    TVNC_OBF(value, "/var/jb/Applications/Sileo.app", 0x37e2d45cedd90b91ULL);
+    return tvnc_obf::makeNSString(value);
+}
+
+static NSString *TVNCRootlessZebraPath(void) {
+    TVNC_OBF(value, "/var/jb/Applications/Zebra.app", 0x4d135cd3a4309e17ULL);
+    return tvnc_obf::makeNSString(value);
+}
+
+static NSString *TVNCRootfulDpkgStatusPath(void) {
+    TVNC_OBF(value, "/var/lib/dpkg/status", 0xfdb0c24ff9fbb513ULL);
+    return tvnc_obf::makeNSString(value);
+}
+
+static NSString *TVNCRootfulMobileSubstratePath(void) {
+    TVNC_OBF(value, "/Library/MobileSubstrate/MobileSubstrate.dylib", 0x28d0bbdb667f2cb6ULL);
+    return tvnc_obf::makeNSString(value);
+}
+
+static NSString *TVNCRootfulCydiaPath(void) {
+    TVNC_OBF(value, "/Applications/Cydia.app", 0x1a5d102e9bc541faULL);
+    return tvnc_obf::makeNSString(value);
+}
+
+static NSString *TVNCRootfulSileoPath(void) {
+    TVNC_OBF(value, "/Applications/Sileo.app", 0x5d4f76cb17b44829ULL);
+    return tvnc_obf::makeNSString(value);
+}
+
+static NSString *TVNCRootfulZebraPath(void) {
+    TVNC_OBF(value, "/Applications/Zebra.app", 0x946da65fdd6bd721ULL);
+    return tvnc_obf::makeNSString(value);
+}
+
+static NSString *TVNCRootfulBashPath(void) {
+    TVNC_OBF(value, "/bin/bash", 0xc0e6d4a59783ae5cULL);
+    return tvnc_obf::makeNSString(value);
+}
+
+static NSString *TVNCRootfulSshdPath(void) {
+    TVNC_OBF(value, "/usr/sbin/sshd", 0x6afc8312ad3ae859ULL);
+    return tvnc_obf::makeNSString(value);
+}
+
 static NSString *TVNCMarkerContent(void) {
     TVNC_OBF(value, "ok", 0x172b69f5d9b40c33ULL);
     return tvnc_obf::makeNSString(value);
@@ -103,6 +179,47 @@ static BOOL TVNCPidFileIndicatesRunning(NSString *path) {
     return errno == EPERM;
 }
 
+typedef NSString *(*TVNCPathProvider)(void);
+
+static BOOL TVNCFileExistsAtAnyPath(NSFileManager *fileManager, const TVNCPathProvider *providers, size_t count) {
+    for (size_t i = 0; i < count; ++i) {
+        if ([fileManager fileExistsAtPath:providers[i]()]) {
+            return YES;
+        }
+    }
+
+    return NO;
+}
+
+static BOOL TVNCDeviceIsJailbroken(NSFileManager *fileManager) {
+    static const TVNCPathProvider rootlessMarkers[] = {
+        TVNCRootlessDpkgStatusPath,
+        TVNCRootlessDpkgPath,
+        TVNCRootlessJbctlPath,
+        TVNCRootlessTweakInjectPath,
+        TVNCRootlessMobileSubstratePath,
+        TVNCRootlessSileoPath,
+        TVNCRootlessZebraPath,
+    };
+
+    static const TVNCPathProvider rootfulMarkers[] = {
+        TVNCRootfulDpkgStatusPath,
+        TVNCRootfulMobileSubstratePath,
+        TVNCRootfulCydiaPath,
+        TVNCRootfulSileoPath,
+        TVNCRootfulZebraPath,
+        TVNCRootfulBashPath,
+        TVNCRootfulSshdPath,
+    };
+
+    if ([fileManager fileExistsAtPath:TVNCRootlessLaunchctlPath()] &&
+        TVNCFileExistsAtAnyPath(fileManager, rootlessMarkers, sizeof(rootlessMarkers) / sizeof(rootlessMarkers[0]))) {
+        return YES;
+    }
+
+    return TVNCFileExistsAtAnyPath(fileManager, rootfulMarkers, sizeof(rootfulMarkers) / sizeof(rootfulMarkers[0]));
+}
+
 @implementation TrollVNCWidgetHelper
 
 + (uint32_t)launchTrollVNCIfNecessary {
@@ -117,7 +234,26 @@ static BOOL TVNCPidFileIndicatesRunning(NSString *path) {
 
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSString *launchedPath = TVNCMarkerPath(TVNCWidgetLaunchedPrefix(), bundleIdentifier);
-    BOOL running = [fileManager fileExistsAtPath:launchedPath];
+    BOOL launched = [fileManager fileExistsAtPath:launchedPath];
+    BOOL deviceIsJailbroken = TVNCDeviceIsJailbroken(fileManager);
+
+    if (deviceIsJailbroken) {
+        if (launched) {
+            return kRunningColor;
+        }
+
+        NSString *markerContent = TVNCMarkerContent();
+        [markerContent writeToFile:launchedPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+        [markerContent writeToFile:TVNCMarkerPath(TVNCWidgetStartupNeedLockPrefix(), bundleIdentifier)
+                        atomically:YES
+                          encoding:NSUTF8StringEncoding
+                             error:nil];
+
+        SBSLockDevice();
+        return kLaunchedColor;
+    }
+
+    BOOL running = launched;
     if (!running) {
         running = TVNCPidFileIndicatesRunning(TVNCManagerPidPath()) || TVNCPidFileIndicatesRunning(TVNCServerPidPath());
     }
