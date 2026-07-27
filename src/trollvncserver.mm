@@ -29,6 +29,7 @@
 #import <cstdio>
 #import <cstdlib>
 #import <cstring>
+#import <dlfcn.h>
 #import <errno.h>
 #import <fcntl.h>
 #import <mach-o/dyld.h>
@@ -4811,6 +4812,81 @@ static void tvSendStartupRightClickAction(void) {
     [gen menuUp];
 }
 
+typedef int (*TVNCSBSLaunchApplicationWithURLAndOptions)(CFStringRef bundleIdentifier, CFURLRef url,
+                                                         CFDictionaryRef appOptions, CFDictionaryRef launchOptions,
+                                                         BOOL suspended);
+typedef int (*TVNCSBSLaunchApplicationWithOptions)(CFStringRef bundleIdentifier, CFDictionaryRef appOptions,
+                                                   CFDictionaryRef launchOptions, BOOL suspended);
+
+static void tvSetSpringBoardLaunchBooleanOption(NSMutableDictionary *options, void *handle, const char *symbolName) {
+    NSString *const *key = NULL;
+    if (handle) {
+        key = (NSString *const *)dlsym(handle, symbolName);
+    }
+    if (!key) {
+        key = (NSString *const *)dlsym(RTLD_DEFAULT, symbolName);
+    }
+    if (key && *key) {
+        options[*key] = @YES;
+    }
+}
+
+static int tvLaunchApplicationWithBundleIdentifier(NSString *bundleIdentifier) {
+#if TARGET_IPHONE_SIMULATOR
+    (void)bundleIdentifier;
+    return -1;
+#else
+    if (bundleIdentifier.length == 0) {
+        return -1;
+    }
+
+    static void *springBoardServicesHandle = NULL;
+    static TVNCSBSLaunchApplicationWithURLAndOptions launchWithURLAndOptions = NULL;
+    static TVNCSBSLaunchApplicationWithOptions launchWithOptions = NULL;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        springBoardServicesHandle =
+            dlopen("/System/Library/PrivateFrameworks/SpringBoardServices.framework/SpringBoardServices", RTLD_LAZY);
+        if (!springBoardServicesHandle) {
+            TVLog(@"Startup launch action: failed to load SpringBoardServices: %s", dlerror());
+            return;
+        }
+
+        launchWithURLAndOptions = (TVNCSBSLaunchApplicationWithURLAndOptions)dlsym(
+            springBoardServicesHandle, "SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions");
+        launchWithOptions = (TVNCSBSLaunchApplicationWithOptions)dlsym(
+            springBoardServicesHandle, "SBSLaunchApplicationWithIdentifierAndLaunchOptions");
+    });
+
+    if (!launchWithURLAndOptions && !launchWithOptions) {
+        TVLog(@"Startup launch action: SpringBoardServices launch symbols unavailable.");
+        return -1;
+    }
+
+    NSMutableDictionary *launchOptions = [NSMutableDictionary dictionary];
+    tvSetSpringBoardLaunchBooleanOption(launchOptions, springBoardServicesHandle,
+                                        "SBSApplicationLaunchOptionUnlockDeviceKey");
+    tvSetSpringBoardLaunchBooleanOption(launchOptions, springBoardServicesHandle,
+                                        "SBSApplicationLaunchOptionPromptUnlockKey");
+    tvSetSpringBoardLaunchBooleanOption(launchOptions, springBoardServicesHandle,
+                                        "SBSApplicationLaunchFromURLOptionUnlockDeviceKey");
+
+    CFStringRef bundleIdentifierRef = (__bridge CFStringRef)bundleIdentifier;
+    CFDictionaryRef launchOptionsRef = (__bridge CFDictionaryRef)launchOptions;
+
+    int result = -1;
+    if (launchWithURLAndOptions) {
+        result = launchWithURLAndOptions(bundleIdentifierRef, NULL, launchOptionsRef, launchOptionsRef, NO);
+    }
+    if (result != 0 && launchWithOptions) {
+        result = launchWithOptions(bundleIdentifierRef, launchOptionsRef, launchOptionsRef, NO);
+    }
+
+    TVLog(@"Startup launch action: launch %@ result=%d", bundleIdentifier, result);
+    return result;
+#endif
+}
+
 static void performStartupDisplayStatusAction(void) {
     static const char *kDisplayStatusName = "com.apple.iokit.hid.displayStatus";
 
@@ -4833,6 +4909,8 @@ static void performStartupDisplayStatusAction(void) {
         // TVLog(@"Startup display action: display is not lit (state=%llu), triggering right-click mapping.",
         //       (unsigned long long)displayState);
         tvSendStartupRightClickAction();
+        sleep(1);
+        tvLaunchApplicationWithBundleIdentifier(@"com.xjc.wugenapp");
     });
 }
 
