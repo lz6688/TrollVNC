@@ -24,15 +24,15 @@
 5. helper 先通过通用 rootless/rootful bootstrap 标记判断当前是否为越狱/Bootstrap 环境，不依赖 TrollVNC 越狱版 LaunchDaemon。
 6. helper 同时检查 TrollVNC 现有 manager/server pid 锁文件，并用 `kill(pid, 0)` 验证进程是否仍存活。
 7. 如果检测到越狱环境且 TrollVNC 服务已经存活，helper 只检查/写入 `/tmp/.trollvnc.widget-launched.<bundle id>` 标记并调用 `SBSLockDevice()` 拉起锁屏，不启动 `com.82flex.TrollVNCApp`。
-8. 如果服务没有存活，即使 iOS 14 rootful 环境残留了 Cydia/Sileo 等越狱标记，也继续走 TrollStore 主 App 拉起路径。
-9. 若未运行，helper 先写入 `/tmp/.trollvnc.widget-startup-need-lock.<bundle id>`。
-10. helper 调用 `SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions`，并把 unlock options 同时传入 `appOptions` 和 `launchOptions`；若失败，再 fallback 到 `SBSLaunchApplicationWithIdentifierAndLaunchOptions`。
+8. 如果检测到越狱环境但 TrollVNC 服务没有存活，helper 清理本次自启标记并直接返回，不启动 `com.82flex.TrollVNCApp`，避免越狱后仍由 TrollStore Widget 拉起服务。
+9. 只有在未越狱环境且服务未运行时，helper 才写入 `/tmp/.trollvnc.widget-startup-need-lock.<bundle id>`。
+10. helper 调用 `SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions`，并把 unlock options 同时传入 `appOptions` 和 `launchOptions`；若失败，再 fallback 到 `SBSLaunchApplicationWithIdentifierAndLaunchOptions`，最多重试 3 次。
 11. 只有 SpringBoardServices 返回成功后，helper 才写入 `/tmp/.trollvnc.widget-launched.<bundle id>`；失败会清理标记，等待下次 Widget 心跳继续重试。
-12. Widget 返回的颜色值用于显示当前状态，并请求 60 秒后刷新。
+12. Widget 返回的颜色值用于显示当前状态，并请求 15 秒后刷新。
 
 ## 关键实现点
 
-- `TrollVNCAutostartWidget.swift` 使用 `.after(Date().addingTimeInterval(60))` 形成每分钟一次的刷新请求。
+- `TrollVNCAutostartWidget.swift` 使用 `.after(Date().addingTimeInterval(15))` 形成更积极的刷新请求；系统仍可能按 WidgetKit 策略延后调度。
 - Widget 支持 `.systemSmall`，iOS 16+ 额外支持 `.accessoryCircular`。
 - helper 使用 ObjC++ 实现，链接项目已有的 `SpringBoardServices.tbd`。
 - helper 中 bundle id、标记路径、pid 路径等敏感字符串使用编译期 XOR 模板混淆，避免直接出现在 `strings` 结果中。

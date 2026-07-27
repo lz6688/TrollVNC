@@ -361,19 +361,28 @@ static BOOL TVNCDeviceIsJailbroken(NSFileManager *fileManager) {
                         TVNCBoolString(serverRunning),
                         TVNCBoolString(deviceIsJailbroken));
 
-    if (deviceIsJailbroken && serviceRunning) {
-        if (launched) {
-            TVNCAppendWidgetLog(@"jailbreak service already running; skip launch");
-            return kRunningColor;
+    NSString *startupNeedLockPath = TVNCMarkerPath(TVNCWidgetStartupNeedLockPrefix(), bundleIdentifier);
+
+    if (deviceIsJailbroken) {
+        if (serviceRunning) {
+            if (launched) {
+                TVNCAppendWidgetLog(@"jailbreak service already running; skip app launch");
+                return kRunningColor;
+            }
+
+            NSString *markerContent = TVNCMarkerContent();
+            TVNCWriteMarker(markerContent, launchedPath, @"launched");
+            TVNCWriteMarker(markerContent, startupNeedLockPath, @"need-lock");
+
+            SBSLockDevice();
+            TVNCAppendWidgetLog(@"jailbreak service running; called lock device only");
+            return kLaunchedColor;
         }
 
-        NSString *markerContent = TVNCMarkerContent();
-        TVNCWriteMarker(markerContent, launchedPath, @"launched");
-        TVNCWriteMarker(markerContent, TVNCMarkerPath(TVNCWidgetStartupNeedLockPrefix(), bundleIdentifier), @"need-lock");
-
-        SBSLockDevice();
-        TVNCAppendWidgetLog(@"jailbreak service running; called SBSLockDevice");
-        return kLaunchedColor;
+        [fileManager removeItemAtPath:launchedPath error:nil];
+        [fileManager removeItemAtPath:startupNeedLockPath error:nil];
+        TVNCAppendWidgetLog(@"jailbreak detected and service stopped; skip app launch");
+        return kRunningColor;
     }
 
     if (serviceRunning) {
@@ -382,7 +391,6 @@ static BOOL TVNCDeviceIsJailbroken(NSFileManager *fileManager) {
     }
 
     NSString *markerContent = TVNCMarkerContent();
-    NSString *startupNeedLockPath = TVNCMarkerPath(TVNCWidgetStartupNeedLockPrefix(), bundleIdentifier);
     TVNCWriteMarker(markerContent, startupNeedLockPath, @"need-lock");
 
     int result = TVNCLaunchApplication(bundleIdentifier, TVNCLaunchOptions(), 3);
