@@ -1,6 +1,7 @@
 #import "TrollVNCWidgetHelper.h"
 
 #import <errno.h>
+#import <dlfcn.h>
 #import <stdint.h>
 #import <signal.h>
 #import <string.h>
@@ -11,6 +12,10 @@ FOUNDATION_EXPORT int SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions(C
                                                                                CFDictionaryRef appOptions,
                                                                                CFDictionaryRef launchOptions,
                                                                                BOOL suspended);
+FOUNDATION_EXPORT int SBSLaunchApplicationWithIdentifierAndLaunchOptions(CFStringRef bundleIdentifier,
+                                                                         CFDictionaryRef appOptions,
+                                                                         CFDictionaryRef launchOptions,
+                                                                         BOOL suspended);
 FOUNDATION_EXPORT void SBSLockDevice(void);
 
 namespace tvnc_obf {
@@ -156,6 +161,16 @@ static NSString *TVNCRootfulSshdPath(void) {
     return tvnc_obf::makeNSString(value);
 }
 
+static NSString *TVNCSBSPromptUnlockKeySymbol(void) {
+    TVNC_OBF(value, "SBSApplicationLaunchOptionPromptUnlockKey", 0xf77b0dca2639d2d5ULL);
+    return tvnc_obf::makeNSString(value);
+}
+
+static NSString *TVNCSBSURLUnlockKeySymbol(void) {
+    TVNC_OBF(value, "SBSApplicationLaunchFromURLOptionUnlockDeviceKey", 0x51612e23a2860b09ULL);
+    return tvnc_obf::makeNSString(value);
+}
+
 static NSString *TVNCMarkerContent(void) {
     TVNC_OBF(value, "ok", 0x172b69f5d9b40c33ULL);
     return tvnc_obf::makeNSString(value);
@@ -177,6 +192,39 @@ static BOOL TVNCPidFileIndicatesRunning(NSString *path) {
     }
 
     return errno == EPERM;
+}
+
+static BOOL TVNCServicePidIndicatesRunning(void) {
+    return TVNCPidFileIndicatesRunning(TVNCManagerPidPath()) || TVNCPidFileIndicatesRunning(TVNCServerPidPath());
+}
+
+static void TVNCSetOptionalSBSBooleanOption(NSMutableDictionary *options, NSString *symbolName) {
+    NSString *const *key = (NSString *const *)dlsym(RTLD_DEFAULT, [symbolName UTF8String]);
+    if (key != NULL && *key != nil) {
+        options[*key] = @YES;
+    }
+}
+
+static NSDictionary *TVNCLaunchOptions(void) {
+    NSMutableDictionary *options = [@{SBSApplicationLaunchOptionUnlockDeviceKey : @YES} mutableCopy];
+    TVNCSetOptionalSBSBooleanOption(options, TVNCSBSPromptUnlockKeySymbol());
+    TVNCSetOptionalSBSBooleanOption(options, TVNCSBSURLUnlockKeySymbol());
+    return options;
+}
+
+static int TVNCLaunchApplication(NSString *bundleIdentifier, NSDictionary *launchOptions) {
+    CFDictionaryRef optionsRef = (__bridge CFDictionaryRef)launchOptions;
+    CFStringRef bundleIdentifierRef = (__bridge CFStringRef)bundleIdentifier;
+    int result = SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions(bundleIdentifierRef,
+                                                                          NULL,
+                                                                          optionsRef,
+                                                                          optionsRef,
+                                                                          NO);
+    if (result == 0) {
+        return result;
+    }
+
+    return SBSLaunchApplicationWithIdentifierAndLaunchOptions(bundleIdentifierRef, optionsRef, optionsRef, NO);
 }
 
 typedef NSString *(*TVNCPathProvider)(void);
@@ -235,9 +283,10 @@ static BOOL TVNCDeviceIsJailbroken(NSFileManager *fileManager) {
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSString *launchedPath = TVNCMarkerPath(TVNCWidgetLaunchedPrefix(), bundleIdentifier);
     BOOL launched = [fileManager fileExistsAtPath:launchedPath];
+    BOOL serviceRunning = TVNCServicePidIndicatesRunning();
     BOOL deviceIsJailbroken = TVNCDeviceIsJailbroken(fileManager);
 
-    if (deviceIsJailbroken) {
+    if (deviceIsJailbroken && serviceRunning) {
         if (launched) {
             return kRunningColor;
         }
@@ -253,29 +302,23 @@ static BOOL TVNCDeviceIsJailbroken(NSFileManager *fileManager) {
         return kLaunchedColor;
     }
 
-    BOOL running = launched;
-    if (!running) {
-        running = TVNCPidFileIndicatesRunning(TVNCManagerPidPath()) || TVNCPidFileIndicatesRunning(TVNCServerPidPath());
-    }
-
-    if (running) {
+    if (serviceRunning) {
         return kRunningColor;
     }
 
     NSString *markerContent = TVNCMarkerContent();
-    [markerContent writeToFile:launchedPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
-    [markerContent writeToFile:TVNCMarkerPath(TVNCWidgetStartupNeedLockPrefix(), bundleIdentifier)
-                    atomically:YES
-                      encoding:NSUTF8StringEncoding
-                         error:nil];
+    NSString *startupNeedLockPath = TVNCMarkerPath(TVNCWidgetStartupNeedLockPrefix(), bundleIdentifier);
+    [markerContent writeToFile:startupNeedLockPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
 
-    NSDictionary *launchOptions = @{SBSApplicationLaunchOptionUnlockDeviceKey : @YES};
-    int result = SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions((__bridge CFStringRef)bundleIdentifier,
-                                                                          NULL,
-                                                                          NULL,
-                                                                          (__bridge CFDictionaryRef)launchOptions,
-                                                                          NO);
-    return result == 0 ? kLaunchedColor : kRunningColor;
+    int result = TVNCLaunchApplication(bundleIdentifier, TVNCLaunchOptions());
+    if (result == 0) {
+        [markerContent writeToFile:launchedPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+        return kLaunchedColor;
+    }
+
+    [fileManager removeItemAtPath:launchedPath error:nil];
+    [fileManager removeItemAtPath:startupNeedLockPath error:nil];
+    return kRunningColor;
 }
 
 @end

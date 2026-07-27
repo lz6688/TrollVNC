@@ -22,13 +22,13 @@
 3. `TrollVNCAutostartProvider` 在 `placeholder`、`getSnapshot`、`getTimeline` 中调用 `TrollVNCWidgetHelper.launchTrollVNCIfNecessary()`。
 4. helper 从 Widget 的 `Info.plist` 读取 `XXT_BUNDLE_ID`，目标为 `com.82flex.TrollVNCApp`。
 5. helper 先通过通用 rootless/rootful bootstrap 标记判断当前是否为越狱/Bootstrap 环境，不依赖 TrollVNC 越狱版 LaunchDaemon。
-6. 如果检测到越狱环境，helper 只检查/写入 `/tmp/.trollvnc.widget-launched.<bundle id>` 标记并调用 `SBSLockDevice()` 拉起锁屏，不启动 `com.82flex.TrollVNCApp`。
-7. 如果不是越狱环境，再检查 widget 标记和 TrollVNC 现有 manager/server pid 锁文件，并用 `kill(pid, 0)` 验证进程是否仍存活。
-8. 若未运行，helper 写入：
-   - `/tmp/.trollvnc.widget-launched.<bundle id>`
-   - `/tmp/.trollvnc.widget-startup-need-lock.<bundle id>`
-9. helper 调用 `SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions`，并传入 `SBSApplicationLaunchOptionUnlockDeviceKey: YES` 拉起主 App。
-10. Widget 返回的颜色值用于显示当前状态，并请求 60 秒后刷新。
+6. helper 同时检查 TrollVNC 现有 manager/server pid 锁文件，并用 `kill(pid, 0)` 验证进程是否仍存活。
+7. 如果检测到越狱环境且 TrollVNC 服务已经存活，helper 只检查/写入 `/tmp/.trollvnc.widget-launched.<bundle id>` 标记并调用 `SBSLockDevice()` 拉起锁屏，不启动 `com.82flex.TrollVNCApp`。
+8. 如果服务没有存活，即使 iOS 14 rootful 环境残留了 Cydia/Sileo 等越狱标记，也继续走 TrollStore 主 App 拉起路径。
+9. 若未运行，helper 先写入 `/tmp/.trollvnc.widget-startup-need-lock.<bundle id>`。
+10. helper 调用 `SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions`，并把 unlock options 同时传入 `appOptions` 和 `launchOptions`；若失败，再 fallback 到 `SBSLaunchApplicationWithIdentifierAndLaunchOptions`。
+11. 只有 SpringBoardServices 返回成功后，helper 才写入 `/tmp/.trollvnc.widget-launched.<bundle id>`；失败会清理标记，等待下次 Widget 心跳继续重试。
+12. Widget 返回的颜色值用于显示当前状态，并请求 60 秒后刷新。
 
 ## 关键实现点
 
@@ -36,6 +36,7 @@
 - Widget 支持 `.systemSmall`，iOS 16+ 额外支持 `.accessoryCircular`。
 - helper 使用 ObjC++ 实现，链接项目已有的 `SpringBoardServices.tbd`。
 - helper 中 bundle id、标记路径、pid 路径等敏感字符串使用编译期 XOR 模板混淆，避免直接出现在 `strings` 结果中。
+- iOS 14 上不把单独的 `widget-launched` 标记当成服务存活依据，避免一次 SpringBoardServices 拉起失败后永久停止重试。
 - 主 App target 依赖并嵌入 Widget 扩展；Widget target 依赖并嵌入 helper dylib。
 - Widget 和 helper 都使用 `TrollVNC/TrollVNC.entitlements` 做 ldid pseudo-sign，满足 TrollStore 场景下私有 API 权限需求。
 
@@ -120,7 +121,7 @@ Payload/TrollVNC.app/PlugIns/TrollVNCAutostartWidget.appex/Frameworks/libTrollVN
 5. 重启后不要手动打开 TrollVNC，等待 1 到 2 分钟。
 6. 预期 TrollVNC 被 Widget 心跳自动拉起到前台。
 
-如需重复测试，推荐重启设备，因为 `/tmp/.trollvnc.widget-launched.*` 会随重启清空。若不重启，helper 会按去重逻辑避免重复拉起。
+如需重复测试，推荐重启设备，因为 `/tmp/.trollvnc.widget-launched.*` 会随重启清空。若不重启，至少清理旧版写入的 `/tmp/.trollvnc.widget-launched.*`，避免旧标记影响新逻辑。
 
 ## 已知说明
 
