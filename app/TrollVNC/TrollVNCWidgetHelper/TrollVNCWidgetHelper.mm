@@ -5,6 +5,7 @@
 #import <stdint.h>
 #import <signal.h>
 #import <string.h>
+#import <unistd.h>
 
 FOUNDATION_EXPORT NSString *const SBSApplicationLaunchOptionUnlockDeviceKey;
 FOUNDATION_EXPORT int SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions(CFStringRef bundleIdentifier,
@@ -73,6 +74,11 @@ static NSString *TVNCWidgetLaunchedPrefix(void) {
 
 static NSString *TVNCWidgetStartupNeedLockPrefix(void) {
     TVNC_OBF(value, "/tmp/.trollvnc.widget-startup-need-lock", 0xe4b475b39023d65aULL);
+    return tvnc_obf::makeNSString(value);
+}
+
+static NSString *TVNCWidgetLogPath(void) {
+    TVNC_OBF(value, "/tmp/trollvnc-widget-autostart.log", 0xb6b1b31288d06471ULL);
     return tvnc_obf::makeNSString(value);
 }
 
@@ -180,6 +186,56 @@ static NSString *TVNCMarkerPath(NSString *prefix, NSString *bundleIdentifier) {
     return [NSString stringWithFormat:@"%@.%@", prefix, bundleIdentifier];
 }
 
+static NSString *TVNCBoolString(BOOL value) {
+    return value ? @"yes" : @"no";
+}
+
+static void TVNCAppendWidgetLog(NSString *format, ...) NS_FORMAT_FUNCTION(1, 2);
+static void TVNCAppendWidgetLog(NSString *format, ...) {
+    @autoreleasepool {
+        va_list args;
+        va_start(args, format);
+        NSString *message = [[NSString alloc] initWithFormat:format arguments:args];
+        va_end(args);
+
+        NSString *path = TVNCWidgetLogPath();
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        NSDictionary *attributes = [fileManager attributesOfItemAtPath:path error:nil];
+        if ([attributes[NSFileSize] unsignedLongLongValue] > 65536) {
+            [fileManager removeItemAtPath:path error:nil];
+        }
+        if (![fileManager fileExistsAtPath:path]) {
+            [fileManager createFileAtPath:path contents:nil attributes:nil];
+        }
+
+        NSString *line = [NSString stringWithFormat:@"%@ pid=%d %@\n", [NSDate date], getpid(), message];
+        NSData *data = [line dataUsingEncoding:NSUTF8StringEncoding];
+        if (!data) {
+            return;
+        }
+
+        NSFileHandle *handle = [NSFileHandle fileHandleForWritingAtPath:path];
+        if (!handle) {
+            return;
+        }
+
+        @try {
+            [handle seekToEndOfFile];
+            [handle writeData:data];
+            [handle closeFile];
+        } @catch (__unused NSException *exception) {
+        }
+    }
+}
+
+static BOOL TVNCWriteMarker(NSString *content, NSString *path, NSString *name) {
+    NSError *error = nil;
+    BOOL ok = [content writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:&error];
+    TVNCAppendWidgetLog(@"write %@ marker=%@ path=%@ error=%@", name, TVNCBoolString(ok), path,
+                        error.localizedDescription ?: @"-");
+    return ok;
+}
+
 static BOOL TVNCPidFileIndicatesRunning(NSString *path) {
     NSString *pidText = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
     pid_t pid = (pid_t)[pidText integerValue];
@@ -192,10 +248,6 @@ static BOOL TVNCPidFileIndicatesRunning(NSString *path) {
     }
 
     return errno == EPERM;
-}
-
-static BOOL TVNCServicePidIndicatesRunning(void) {
-    return TVNCPidFileIndicatesRunning(TVNCManagerPidPath()) || TVNCPidFileIndicatesRunning(TVNCServerPidPath());
 }
 
 static void TVNCSetOptionalSBSBooleanOption(NSMutableDictionary *options, NSString *symbolName) {
@@ -212,19 +264,34 @@ static NSDictionary *TVNCLaunchOptions(void) {
     return options;
 }
 
-static int TVNCLaunchApplication(NSString *bundleIdentifier, NSDictionary *launchOptions) {
+static int TVNCLaunchApplication(NSString *bundleIdentifier, NSDictionary *launchOptions, NSUInteger maxAttempts) {
     CFDictionaryRef optionsRef = (__bridge CFDictionaryRef)launchOptions;
     CFStringRef bundleIdentifierRef = (__bridge CFStringRef)bundleIdentifier;
-    int result = SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions(bundleIdentifierRef,
+    int result = -1;
+
+    for (NSUInteger attempt = 1; attempt <= maxAttempts; ++attempt) {
+        result = SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions(bundleIdentifierRef,
                                                                           NULL,
                                                                           optionsRef,
                                                                           optionsRef,
                                                                           NO);
-    if (result == 0) {
-        return result;
+        TVNCAppendWidgetLog(@"launch attempt=%lu primary=%d", (unsigned long)attempt, result);
+        if (result == 0) {
+            return result;
+        }
+
+        result = SBSLaunchApplicationWithIdentifierAndLaunchOptions(bundleIdentifierRef, optionsRef, optionsRef, NO);
+        TVNCAppendWidgetLog(@"launch attempt=%lu fallback=%d", (unsigned long)attempt, result);
+        if (result == 0) {
+            return result;
+        }
+
+        if (attempt < maxAttempts) {
+            usleep(1000000);
+        }
     }
 
-    return SBSLaunchApplicationWithIdentifierAndLaunchOptions(bundleIdentifierRef, optionsRef, optionsRef, NO);
+    return result;
 }
 
 typedef NSString *(*TVNCPathProvider)(void);
@@ -283,41 +350,51 @@ static BOOL TVNCDeviceIsJailbroken(NSFileManager *fileManager) {
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSString *launchedPath = TVNCMarkerPath(TVNCWidgetLaunchedPrefix(), bundleIdentifier);
     BOOL launched = [fileManager fileExistsAtPath:launchedPath];
-    BOOL serviceRunning = TVNCServicePidIndicatesRunning();
+    BOOL managerRunning = TVNCPidFileIndicatesRunning(TVNCManagerPidPath());
+    BOOL serverRunning = TVNCPidFileIndicatesRunning(TVNCServerPidPath());
+    BOOL serviceRunning = managerRunning || serverRunning;
     BOOL deviceIsJailbroken = TVNCDeviceIsJailbroken(fileManager);
+    TVNCAppendWidgetLog(@"begin bundle=%@ launchedMarker=%@ managerPid=%@ serverPid=%@ jailbreak=%@",
+                        bundleIdentifier,
+                        TVNCBoolString(launched),
+                        TVNCBoolString(managerRunning),
+                        TVNCBoolString(serverRunning),
+                        TVNCBoolString(deviceIsJailbroken));
 
     if (deviceIsJailbroken && serviceRunning) {
         if (launched) {
+            TVNCAppendWidgetLog(@"jailbreak service already running; skip launch");
             return kRunningColor;
         }
 
         NSString *markerContent = TVNCMarkerContent();
-        [markerContent writeToFile:launchedPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
-        [markerContent writeToFile:TVNCMarkerPath(TVNCWidgetStartupNeedLockPrefix(), bundleIdentifier)
-                        atomically:YES
-                          encoding:NSUTF8StringEncoding
-                             error:nil];
+        TVNCWriteMarker(markerContent, launchedPath, @"launched");
+        TVNCWriteMarker(markerContent, TVNCMarkerPath(TVNCWidgetStartupNeedLockPrefix(), bundleIdentifier), @"need-lock");
 
         SBSLockDevice();
+        TVNCAppendWidgetLog(@"jailbreak service running; called SBSLockDevice");
         return kLaunchedColor;
     }
 
     if (serviceRunning) {
+        TVNCAppendWidgetLog(@"service already running; skip launch");
         return kRunningColor;
     }
 
     NSString *markerContent = TVNCMarkerContent();
     NSString *startupNeedLockPath = TVNCMarkerPath(TVNCWidgetStartupNeedLockPrefix(), bundleIdentifier);
-    [markerContent writeToFile:startupNeedLockPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    TVNCWriteMarker(markerContent, startupNeedLockPath, @"need-lock");
 
-    int result = TVNCLaunchApplication(bundleIdentifier, TVNCLaunchOptions());
+    int result = TVNCLaunchApplication(bundleIdentifier, TVNCLaunchOptions(), 3);
     if (result == 0) {
-        [markerContent writeToFile:launchedPath atomically:YES encoding:NSUTF8StringEncoding error:nil];
+        TVNCWriteMarker(markerContent, launchedPath, @"launched");
+        TVNCAppendWidgetLog(@"launch app succeeded");
         return kLaunchedColor;
     }
 
     [fileManager removeItemAtPath:launchedPath error:nil];
     [fileManager removeItemAtPath:startupNeedLockPath error:nil];
+    TVNCAppendWidgetLog(@"launch app failed; markers removed");
     return kRunningColor;
 }
 

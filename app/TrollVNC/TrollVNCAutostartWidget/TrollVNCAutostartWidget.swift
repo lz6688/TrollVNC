@@ -17,7 +17,7 @@ struct TrollVNCAutostartProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<TrollVNCAutostartEntry>) -> Void) {
         let entry = makeEntry()
-        let nextRefresh = Date().addingTimeInterval(60)
+        let nextRefresh = Date().addingTimeInterval(15)
         completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
     }
 
