@@ -21,15 +21,8 @@
 #import <Foundation/Foundation.h>
 #import <MobileCoreServices/LSApplicationProxy.h>
 #import <arpa/inet.h>
-#import <fcntl.h>
 #import <netinet/in.h>
-#import <signal.h>
-#import <spawn.h>
-#import <stdlib.h>
-#import <string.h>
 #import <sys/socket.h>
-#import <sys/wait.h>
-#import <unistd.h>
 
 #import "Control.h"
 
@@ -40,122 +33,6 @@ FOUNDATION_EXPORT
 int SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions(CFStringRef bundleIdentifier, CFURLRef url,
                                                              CFDictionaryRef appOptions, CFDictionaryRef launchOptions,
                                                              BOOL suspended);
-
-extern char **environ;
-
-static BOOL TVNCFileExistsAtAnyPath(NSFileManager *fileManager, NSArray<NSString *> *paths) {
-    for (NSString *path in paths) {
-        if ([fileManager fileExistsAtPath:path]) {
-            return YES;
-        }
-    }
-
-    return NO;
-}
-
-static BOOL TVNCExecutableProbeSucceeds(NSString *path, NSArray<NSString *> *arguments) {
-    NSUInteger argc = arguments.count + 2;
-    char **argv = (char **)calloc(argc, sizeof(char *));
-    if (!argv) {
-        return NO;
-    }
-
-    argv[0] = strdup([path fileSystemRepresentation]);
-    for (NSUInteger i = 0; i < arguments.count; ++i) {
-        argv[i + 1] = strdup([arguments[i] UTF8String]);
-    }
-
-    posix_spawn_file_actions_t actions;
-    BOOL actionsReady = posix_spawn_file_actions_init(&actions) == 0;
-    if (actionsReady) {
-        posix_spawn_file_actions_addopen(&actions, STDIN_FILENO, "/dev/null", O_RDONLY, 0);
-        posix_spawn_file_actions_addopen(&actions, STDOUT_FILENO, "/dev/null", O_WRONLY, 0);
-        posix_spawn_file_actions_addopen(&actions, STDERR_FILENO, "/dev/null", O_WRONLY, 0);
-    }
-
-    pid_t pid = -1;
-    int spawnResult = posix_spawn(&pid, argv[0], actionsReady ? &actions : NULL, NULL, argv, environ);
-
-    if (actionsReady) {
-        posix_spawn_file_actions_destroy(&actions);
-    }
-    for (NSUInteger i = 0; i < argc; ++i) {
-        free(argv[i]);
-    }
-    free(argv);
-
-    if (spawnResult != 0) {
-        return NO;
-    }
-
-    int status = 0;
-    BOOL exited = NO;
-    for (NSUInteger attempt = 0; attempt < 20; ++attempt) {
-        pid_t waitResult = waitpid(pid, &status, WNOHANG);
-        if (waitResult == pid) {
-            exited = YES;
-            break;
-        }
-        if (waitResult < 0) {
-            return NO;
-        }
-        usleep(100000);
-    }
-
-    if (!exited) {
-        kill(pid, SIGKILL);
-        waitpid(pid, &status, 0);
-        return NO;
-    }
-
-    return WIFEXITED(status) && WEXITSTATUS(status) == 0;
-}
-
-static BOOL TVNCDeviceIsActivelyJailbroken(void) {
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSString *rootlessLaunchctlPath = @"/var/jb/usr/bin/launchctl";
-    NSArray<NSString *> *rootlessMarkers = @[
-        @"/var/jb/var/lib/dpkg/status",
-        @"/var/jb/usr/bin/dpkg",
-        @"/var/jb/basebin/jbctl",
-        @"/var/jb/usr/lib/TweakInject.dylib",
-        @"/var/jb/Library/MobileSubstrate/MobileSubstrate.dylib",
-        @"/var/jb/Applications/Sileo.app",
-        @"/var/jb/Applications/Zebra.app",
-    ];
-
-    if ([fileManager fileExistsAtPath:rootlessLaunchctlPath] &&
-        TVNCFileExistsAtAnyPath(fileManager, rootlessMarkers) &&
-        TVNCExecutableProbeSucceeds(rootlessLaunchctlPath, @[ @"help" ])) {
-        return YES;
-    }
-
-    NSArray<NSString *> *rootfulMarkers = @[
-        @"/var/lib/dpkg/status",
-        @"/Library/MobileSubstrate/MobileSubstrate.dylib",
-        @"/Applications/Cydia.app",
-        @"/Applications/Sileo.app",
-        @"/Applications/Zebra.app",
-        @"/bin/bash",
-        @"/usr/sbin/sshd",
-        @"/usr/bin/dpkg",
-    ];
-    if (!TVNCFileExistsAtAnyPath(fileManager, rootfulMarkers)) {
-        return NO;
-    }
-
-    if ([fileManager fileExistsAtPath:@"/bin/bash"] &&
-        TVNCExecutableProbeSucceeds(@"/bin/bash", @[ @"-c", @":" ])) {
-        return YES;
-    }
-
-    if ([fileManager fileExistsAtPath:@"/usr/bin/dpkg"] &&
-        TVNCExecutableProbeSucceeds(@"/usr/bin/dpkg", @[ @"--version" ])) {
-        return YES;
-    }
-
-    return NO;
-}
 
 @interface TVNCServiceCoordinator ()
 @property(nonatomic, strong) NSTimer *checkTimer;
@@ -241,17 +118,6 @@ static BOOL TVNCDeviceIsActivelyJailbroken(void) {
 - (void)ensureServiceRunning {
     BOOL running = [self _isServiceRunning];
     if (!running) {
-        if (TVNCDeviceIsActivelyJailbroken()) {
-#if DEBUG
-            NSLog(@"[TVNC] Active jailbreak detected; skip launching trollvncmanager");
-#endif
-            if (_serviceRunning) {
-                _serviceRunning = NO;
-                [[NSNotificationCenter defaultCenter] postNotificationName:TVNCServiceStatusDidChangeNotification
-                                                                    object:self];
-            }
-            return;
-        }
         [self checkPrebootDependencies];
         [self spawnService];
     }
