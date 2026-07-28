@@ -38,6 +38,7 @@
 - helper 中 bundle id、标记路径、pid 路径等敏感字符串使用编译期 XOR 模板混淆，避免直接出现在 `strings` 结果中。
 - 越狱判断使用保守策略：rootless 需要 `launchctl help` 能实际执行成功，rootful 需要 `/bin/bash -c :` 或 `/usr/bin/dpkg --version` 能执行成功；如果只是文件存在但当前系统没有激活越狱，则继续走 TrollStore 自启路径。
 - iOS 14 上不把单独的 `widget-launched` 标记当成服务存活依据，避免一次 SpringBoardServices 拉起失败后永久停止重试。
+- 主 App 的 `TVNCServiceCoordinator` 在启动 `trollvncmanager` 前也会做同样的活跃越狱态确认；如果当前已越狱，则不执行 preboot 拉起，也不启动 bundle 内的 `trollvncmanager`。
 - 主 App target 依赖并嵌入 Widget 扩展；Widget target 依赖并嵌入 helper dylib。
 - Widget 和 helper 都使用 `TrollVNC/TrollVNC.entitlements` 做 ldid pseudo-sign，满足 TrollStore 场景下私有 API 权限需求。
 
