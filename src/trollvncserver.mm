@@ -4910,7 +4910,7 @@ static void performStartupDisplayStatusAction(void) {
         //       (unsigned long long)displayState);
         tvSendStartupRightClickAction();
         sleep(1);
-        tvLaunchApplicationWithBundleIdentifier(@"com.xjc.wugenapp");
+        tvLaunchApplicationWithBundleIdentifier(@"com.ld.cdy");
     });
 }
 
