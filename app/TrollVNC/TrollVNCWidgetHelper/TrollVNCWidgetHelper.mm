@@ -2,9 +2,12 @@
 
 #import <errno.h>
 #import <dlfcn.h>
+#import <fcntl.h>
+#import <spawn.h>
 #import <stdint.h>
 #import <signal.h>
 #import <string.h>
+#import <sys/wait.h>
 #import <unistd.h>
 
 FOUNDATION_EXPORT NSString *const SBSApplicationLaunchOptionUnlockDeviceKey;
@@ -18,6 +21,8 @@ FOUNDATION_EXPORT int SBSLaunchApplicationWithIdentifierAndLaunchOptions(CFStrin
                                                                          CFDictionaryRef launchOptions,
                                                                          BOOL suspended);
 FOUNDATION_EXPORT void SBSLockDevice(void);
+
+extern char **environ;
 
 namespace tvnc_obf {
 
@@ -134,6 +139,11 @@ static NSString *TVNCRootlessZebraPath(void) {
 
 static NSString *TVNCRootfulDpkgStatusPath(void) {
     TVNC_OBF(value, "/var/lib/dpkg/status", 0xfdb0c24ff9fbb513ULL);
+    return tvnc_obf::makeNSString(value);
+}
+
+static NSString *TVNCRootfulDpkgPath(void) {
+    TVNC_OBF(value, "/usr/bin/dpkg", 0x34de081aca507f3eULL);
     return tvnc_obf::makeNSString(value);
 }
 
@@ -306,6 +316,70 @@ static BOOL TVNCFileExistsAtAnyPath(NSFileManager *fileManager, const TVNCPathPr
     return NO;
 }
 
+static BOOL TVNCExecutableProbeSucceeds(NSString *path, NSArray<NSString *> *arguments, NSString *name) {
+    NSUInteger argc = arguments.count + 2;
+    char **argv = (char **)calloc(argc, sizeof(char *));
+    if (!argv) {
+        TVNCAppendWidgetLog(@"jailbreak probe=%@ alloc failed", name);
+        return NO;
+    }
+
+    argv[0] = strdup([path fileSystemRepresentation]);
+    for (NSUInteger i = 0; i < arguments.count; ++i) {
+        argv[i + 1] = strdup([arguments[i] UTF8String]);
+    }
+
+    posix_spawn_file_actions_t actions;
+    BOOL actionsReady = posix_spawn_file_actions_init(&actions) == 0;
+    if (actionsReady) {
+        posix_spawn_file_actions_addopen(&actions, STDIN_FILENO, "/dev/null", O_RDONLY, 0);
+        posix_spawn_file_actions_addopen(&actions, STDOUT_FILENO, "/dev/null", O_WRONLY, 0);
+        posix_spawn_file_actions_addopen(&actions, STDERR_FILENO, "/dev/null", O_WRONLY, 0);
+    }
+
+    pid_t pid = -1;
+    int spawnResult = posix_spawn(&pid, argv[0], actionsReady ? &actions : NULL, NULL, argv, environ);
+
+    if (actionsReady) {
+        posix_spawn_file_actions_destroy(&actions);
+    }
+    for (NSUInteger i = 0; i < argc; ++i) {
+        free(argv[i]);
+    }
+    free(argv);
+
+    if (spawnResult != 0) {
+        TVNCAppendWidgetLog(@"jailbreak probe=%@ spawn failed errno=%d", name, spawnResult);
+        return NO;
+    }
+
+    int status = 0;
+    BOOL exited = NO;
+    for (NSUInteger attempt = 0; attempt < 20; ++attempt) {
+        pid_t waitResult = waitpid(pid, &status, WNOHANG);
+        if (waitResult == pid) {
+            exited = YES;
+            break;
+        }
+        if (waitResult < 0) {
+            TVNCAppendWidgetLog(@"jailbreak probe=%@ wait failed errno=%d", name, errno);
+            return NO;
+        }
+        usleep(100000);
+    }
+
+    if (!exited) {
+        kill(pid, SIGKILL);
+        waitpid(pid, &status, 0);
+        TVNCAppendWidgetLog(@"jailbreak probe=%@ timed out", name);
+        return NO;
+    }
+
+    BOOL ok = WIFEXITED(status) && WEXITSTATUS(status) == 0;
+    TVNCAppendWidgetLog(@"jailbreak probe=%@ exited=%@ status=%d", name, TVNCBoolString(ok), status);
+    return ok;
+}
+
 static BOOL TVNCDeviceIsJailbroken(NSFileManager *fileManager) {
     static const TVNCPathProvider rootlessMarkers[] = {
         TVNCRootlessDpkgStatusPath,
@@ -325,14 +399,32 @@ static BOOL TVNCDeviceIsJailbroken(NSFileManager *fileManager) {
         TVNCRootfulZebraPath,
         TVNCRootfulBashPath,
         TVNCRootfulSshdPath,
+        TVNCRootfulDpkgPath,
     };
 
-    if ([fileManager fileExistsAtPath:TVNCRootlessLaunchctlPath()] &&
-        TVNCFileExistsAtAnyPath(fileManager, rootlessMarkers, sizeof(rootlessMarkers) / sizeof(rootlessMarkers[0]))) {
+    BOOL hasRootlessMarkers =
+        [fileManager fileExistsAtPath:TVNCRootlessLaunchctlPath()] &&
+        TVNCFileExistsAtAnyPath(fileManager, rootlessMarkers, sizeof(rootlessMarkers) / sizeof(rootlessMarkers[0]));
+    if (hasRootlessMarkers &&
+        TVNCExecutableProbeSucceeds(TVNCRootlessLaunchctlPath(), @[ @"help" ], @"rootless launchctl")) {
         return YES;
     }
 
-    return TVNCFileExistsAtAnyPath(fileManager, rootfulMarkers, sizeof(rootfulMarkers) / sizeof(rootfulMarkers[0]));
+    if (!TVNCFileExistsAtAnyPath(fileManager, rootfulMarkers, sizeof(rootfulMarkers) / sizeof(rootfulMarkers[0]))) {
+        return NO;
+    }
+
+    if ([fileManager fileExistsAtPath:TVNCRootfulBashPath()] &&
+        TVNCExecutableProbeSucceeds(TVNCRootfulBashPath(), @[ @"-c", @":" ], @"rootful bash")) {
+        return YES;
+    }
+
+    if ([fileManager fileExistsAtPath:TVNCRootfulDpkgPath()] &&
+        TVNCExecutableProbeSucceeds(TVNCRootfulDpkgPath(), @[ @"--version" ], @"rootful dpkg")) {
+        return YES;
+    }
+
+    return NO;
 }
 
 @implementation TrollVNCWidgetHelper

@@ -21,10 +21,10 @@
 2. iOS 按 WidgetKit timeline 策略唤醒 `TrollVNCAutostartWidget.appex`。
 3. `TrollVNCAutostartProvider` 在 `placeholder`、`getSnapshot`、`getTimeline` 中调用 `TrollVNCWidgetHelper.launchTrollVNCIfNecessary()`。
 4. helper 从 Widget 的 `Info.plist` 读取 `XXT_BUNDLE_ID`，目标为 `com.82flex.TrollVNCApp`。
-5. helper 先通过通用 rootless/rootful bootstrap 标记判断当前是否为越狱/Bootstrap 环境，不依赖 TrollVNC 越狱版 LaunchDaemon。
+5. helper 先通过通用 rootless/rootful bootstrap 标记筛选候选越狱环境，再尝试执行对应越狱二进制做“活跃越狱态”确认；重启后仅残留 `/var/jb`、Cydia/Sileo 等文件时不拦截自启。
 6. helper 同时检查 TrollVNC 现有 manager/server pid 锁文件，并用 `kill(pid, 0)` 验证进程是否仍存活。
-7. 如果检测到越狱环境且 TrollVNC 服务已经存活，helper 只检查/写入 `/tmp/.trollvnc.widget-launched.<bundle id>` 标记并调用 `SBSLockDevice()` 拉起锁屏，不启动 `com.82flex.TrollVNCApp`。
-8. 如果检测到越狱环境但 TrollVNC 服务没有存活，helper 清理本次自启标记并直接返回，不启动 `com.82flex.TrollVNCApp`，避免越狱后仍由 TrollStore Widget 拉起服务。
+7. 如果确认当前是活跃越狱环境且 TrollVNC 服务已经存活，helper 只检查/写入 `/tmp/.trollvnc.widget-launched.<bundle id>` 标记并调用 `SBSLockDevice()` 拉起锁屏，不启动 `com.82flex.TrollVNCApp`。
+8. 如果确认当前是活跃越狱环境但 TrollVNC 服务没有存活，helper 清理本次自启标记并直接返回，不启动 `com.82flex.TrollVNCApp`，避免越狱后仍由 TrollStore Widget 拉起服务。
 9. 只有在未越狱环境且服务未运行时，helper 才写入 `/tmp/.trollvnc.widget-startup-need-lock.<bundle id>`。
 10. helper 调用 `SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions`，并把 unlock options 同时传入 `appOptions` 和 `launchOptions`；若失败，再 fallback 到 `SBSLaunchApplicationWithIdentifierAndLaunchOptions`，最多重试 3 次。
 11. 只有 SpringBoardServices 返回成功后，helper 才写入 `/tmp/.trollvnc.widget-launched.<bundle id>`；失败会清理标记，等待下次 Widget 心跳继续重试。
@@ -36,6 +36,7 @@
 - Widget 支持 `.systemSmall`，iOS 16+ 额外支持 `.accessoryCircular`。
 - helper 使用 ObjC++ 实现，链接项目已有的 `SpringBoardServices.tbd`。
 - helper 中 bundle id、标记路径、pid 路径等敏感字符串使用编译期 XOR 模板混淆，避免直接出现在 `strings` 结果中。
+- 越狱判断使用保守策略：rootless 需要 `launchctl help` 能实际执行成功，rootful 需要 `/bin/bash -c :` 或 `/usr/bin/dpkg --version` 能执行成功；如果只是文件存在但当前系统没有激活越狱，则继续走 TrollStore 自启路径。
 - iOS 14 上不把单独的 `widget-launched` 标记当成服务存活依据，避免一次 SpringBoardServices 拉起失败后永久停止重试。
 - 主 App target 依赖并嵌入 Widget 扩展；Widget target 依赖并嵌入 helper dylib。
 - Widget 和 helper 都使用 `TrollVNC/TrollVNC.entitlements` 做 ldid pseudo-sign，满足 TrollStore 场景下私有 API 权限需求。
