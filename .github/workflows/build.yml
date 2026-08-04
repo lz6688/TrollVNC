@@ -67,6 +67,11 @@ on:
         description: Repeater ID (numeric)
         required: false
         default: ""
+      widget_refresh_interval_seconds:
+        type: string
+        description: Widget refresh request interval in seconds (5-3600)
+        required: false
+        default: "300"
 
 env:
   FINALPACKAGE: 1
@@ -117,7 +122,7 @@ jobs:
       - name: Generate Managed.plist (managed build)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.is_managed == true }}
         env:
-          # Inputs (kept up to 10)
+          # Workflow inputs
           TVNC_DESKTOP_NAME: ${{ inputs.desktop_name }}
           TVNC_PORT: ${{ inputs.port }}
           TVNC_HTTP_PORT: ${{ inputs.httpport }}
@@ -128,6 +133,7 @@ jobs:
           TVNC_REVERSE_MODE: ${{ inputs.reverse_mode }}
           TVNC_REVERSE_SOCKET: ${{ inputs.reverse_socket }}
           TVNC_REVERSE_REPEATER_ID: ${{ inputs.reverse_repeater_id }}
+          TVNC_WIDGET_REFRESH_INTERVAL_SECONDS: ${{ inputs.widget_refresh_interval_seconds }}
           TVNC_DEFER_WINDOW_SEC: 0.012
           TVNC_MAX_INFLIGHT: 2
           TVNC_TILE_SIZE: 32
