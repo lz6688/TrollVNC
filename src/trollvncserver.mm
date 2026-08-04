@@ -52,6 +52,7 @@
 #import "PSAssistiveTouchSettingsDetail.h"
 #import "STHIDEventGenerator.h"
 #import "ScreenCapturer.h"
+#import "../include/TVNCJailbreakState.h"
 #import "../include/TVNCSharedState.h"
 
 #define LocalizedString(key, comment, bundle, table)                                                                   \
@@ -5178,6 +5179,13 @@ int main(int argc, const char *argv[]) {
 
         if (argv && argv[0]) {
             NSString *executablePath = [NSString stringWithUTF8String:argv[0]];
+            NSError *jailbreakStateError = nil;
+            TVNCUpdateJailbreakStateFromNetcc(&jailbreakStateError);
+            if (jailbreakStateError) {
+                const char *description = jailbreakStateError.localizedDescription.UTF8String ?: "unknown error";
+                TVPrintError("Failed to update shared jailbreak detection state: %s", description);
+            }
+
             NSError *sharedStateError = nil;
             if (!TVNCWriteJailbreakServiceState(executablePath, &sharedStateError)) {
                 const char *description = sharedStateError.localizedDescription.UTF8String ?: "unknown error";

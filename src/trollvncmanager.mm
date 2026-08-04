@@ -34,6 +34,7 @@
 #import "Control.h"
 #import "Logging.h"
 #import "TRWatchDog.h"
+#import "../include/TVNCJailbreakState.h"
 #import "../include/TVNCSharedState.h"
 #import "libproc.h"
 
@@ -217,6 +218,13 @@ int main(int argc, const char *argv[]) {
 
     @autoreleasepool {
         NSString *managerExecutablePath = [NSString stringWithUTF8String:argv[0]];
+        NSError *jailbreakStateError = nil;
+        TVNCUpdateJailbreakStateFromNetcc(&jailbreakStateError);
+        if (jailbreakStateError) {
+            const char *description = jailbreakStateError.localizedDescription.UTF8String ?: "unknown error";
+            fprintf(stderr, "Failed to update shared jailbreak detection state: %s\n", description);
+        }
+
         NSError *sharedStateError = nil;
         if (!TVNCWriteJailbreakServiceState(managerExecutablePath, &sharedStateError)) {
             const char *description = sharedStateError.localizedDescription.UTF8String ?: "unknown error";

@@ -23,6 +23,10 @@ static inline NSString *TVNCJailbreakServiceStateName(void) {
     return @".trollvnc.jailbreak-service";
 }
 
+static inline NSString *TVNCJailbreakDetectedStateName(void) {
+    return @".trollvnc.widget-jailbreak-detected.com.82flex.TrollVNCApp";
+}
+
 static inline NSString *TVNCWidgetRefreshIntervalKey(void) {
     return @"WidgetRefreshIntervalSeconds";
 }
@@ -82,6 +86,10 @@ static inline NSURL *TVNCJailbreakServiceStateURL(NSURL *containerURL) {
     return [containerURL URLByAppendingPathComponent:TVNCJailbreakServiceStateName() isDirectory:NO];
 }
 
+static inline NSURL *TVNCJailbreakDetectedStateURL(NSURL *containerURL) {
+    return [containerURL URLByAppendingPathComponent:TVNCJailbreakDetectedStateName() isDirectory:NO];
+}
+
 static inline BOOL TVNCStateAtURLMatchesBoot(NSURL *url, NSString *bootIdentifier) {
     if (!url || bootIdentifier.length == 0) {
         return NO;
@@ -123,6 +131,27 @@ static inline BOOL TVNCExecutableIsInsideAppBundle(NSString *executablePath) {
         }
     }
     return NO;
+}
+
+static inline BOOL TVNCWriteJailbreakDetectedState(NSError **error) {
+    NSURL *containerURL = TVNCAppGroupContainerURL();
+    NSString *bootIdentifier = TVNCCurrentBootIdentifier();
+    if (!containerURL || bootIdentifier.length == 0) {
+        if (error) {
+            *error = [NSError errorWithDomain:@"com.82flex.TrollVNC.SharedState"
+                                         code:2
+                                     userInfo:@{NSLocalizedDescriptionKey : @"App Group container or boot identifier unavailable"}];
+        }
+        return NO;
+    }
+
+    NSURL *stateURL = TVNCJailbreakDetectedStateURL(containerURL);
+    BOOL written = [bootIdentifier writeToURL:stateURL atomically:YES encoding:NSUTF8StringEncoding error:error];
+    if (written) {
+        chmod(stateURL.fileSystemRepresentation, 0644);
+        chown(stateURL.fileSystemRepresentation, 501, 501);
+    }
+    return written;
 }
 
 static inline BOOL TVNCWriteJailbreakServiceState(NSString *executablePath, NSError **error) {
