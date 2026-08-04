@@ -19,7 +19,7 @@
 
 1. 用户安装 TrollStore 版 TrollVNC，并把 TrollVNC 小组件添加到桌面或锁屏。
 2. iOS 按 WidgetKit timeline 策略唤醒 `TrollVNCAutostartWidget.appex`。
-3. `TrollVNCAutostartProvider` 在 `placeholder`、`getSnapshot`、`getTimeline` 中调用 `TrollVNCWidgetHelper.launchTrollVNCIfNecessary()`。
+3. `TrollVNCAutostartProvider` 仅在 `getTimeline` 中调用 `TrollVNCWidgetHelper.launchTrollVNCIfNecessary()`；`placeholder` 和 `getSnapshot` 只生成静态预览，避免在小组件图库中启动 TrollVNC。
 4. helper 从 Widget 的 `Info.plist` 读取 `XXT_BUNDLE_ID`，目标为 `com.82flex.TrollVNCApp`。
 5. helper 先通过通用 rootless/rootful bootstrap 标记筛选候选越狱环境，再尝试执行对应越狱二进制做“活跃越狱态”确认；重启后仅残留 `/var/jb`、Cydia/Sileo 等文件时不拦截自启。
 6. helper 同时检查 TrollVNC 现有 manager/server pid 锁文件，并用 `kill(pid, 0)` 验证进程是否仍存活。

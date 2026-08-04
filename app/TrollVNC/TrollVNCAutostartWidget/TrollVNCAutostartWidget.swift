@@ -8,21 +8,21 @@ struct TrollVNCAutostartEntry: TimelineEntry {
 
 struct TrollVNCAutostartProvider: TimelineProvider {
     func placeholder(in context: Context) -> TrollVNCAutostartEntry {
-        makeEntry()
+        makeEntry(colorCode: 0x003566E7)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (TrollVNCAutostartEntry) -> Void) {
-        completion(makeEntry())
+        completion(makeEntry(colorCode: 0x003566E7))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<TrollVNCAutostartEntry>) -> Void) {
-        let entry = makeEntry()
+        let colorCode = TrollVNCWidgetHelper.launchTrollVNCIfNecessary()
+        let entry = makeEntry(colorCode: colorCode)
         let nextRefresh = Date().addingTimeInterval(15)
         completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
     }
 
-    private func makeEntry() -> TrollVNCAutostartEntry {
-        let colorCode = TrollVNCWidgetHelper.launchTrollVNCIfNecessary()
+    private func makeEntry(colorCode: UInt32) -> TrollVNCAutostartEntry {
         let color = Color(
             .sRGB,
             red: Double((colorCode >> 16) & 0xff) / 255.0,
