@@ -413,6 +413,12 @@ static int TVNCLaunchApplication(NSString *bundleIdentifier, NSDictionary *launc
 
 @implementation TrollVNCWidgetHelper
 
++ (NSTimeInterval)widgetRefreshInterval {
+    NSTimeInterval interval = TVNCWidgetRefreshInterval();
+    TVNCLog(@"timeline refresh requested after=%.0fs", interval);
+    return interval;
+}
+
 + (uint32_t)launchTrollVNCIfNecessary {
     static const uint32_t kRunningColor = 3502775;  // 0x003566E7
     static const uint32_t kLaunchedColor = 7632505; // 0x00746E69

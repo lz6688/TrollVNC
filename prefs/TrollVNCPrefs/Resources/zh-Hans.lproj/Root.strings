@@ -166,6 +166,12 @@
 
 "Shown to VNC clients" = "在客户端显示";
 
+"Widget Autostart" = "小组件自动启动";
+
+"Refresh Interval (sec)" = "刷新间隔（秒）";
+
+"Earliest Widget timeline retry request in seconds. Default 300; valid range 5–3600. WidgetKit may delay the actual refresh." = "小组件最早请求下一次时间线刷新的间隔。默认 300 秒，有效范围 5–3600 秒；实际刷新时间可能被 WidgetKit 延后。";
+
 "Silence Notifications" = "静默通知";
 
 "Single fps (e.g. 60), range min-max (e.g. 30-60), or full spec min:pref:max (e.g. 30:60:120). iOS 15+ uses range; iOS 14 uses preferred/max." = "单一帧率（如 60），范围 min-max（如 30-60），或完整规格 min:pref:max（如 30:60:120）。iOS 15+ 使用范围；iOS 14 使用偏好/最大。";

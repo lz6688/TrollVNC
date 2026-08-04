@@ -93,6 +93,7 @@ add_int FullscreenThresholdPercent     "${TVNC_FULLSCREEN_THRESHOLD_PERCENT:-}"
 add_int MaxRects                       "${TVNC_MAX_RECTS:-}"
 add_int HttpPort                       "${TVNC_HTTP_PORT:-}"
 add_int ReverseRepeaterID              "${TVNC_REVERSE_REPEATER_ID:-}"
+add_int WidgetRefreshIntervalSeconds   "${TVNC_WIDGET_REFRESH_INTERVAL_SECONDS:-300}"
 
 # Reals (optional)
 add_real KeepAliveSec         "${TVNC_KEEPALIVE_SEC:-}"

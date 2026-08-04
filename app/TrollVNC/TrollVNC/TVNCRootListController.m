@@ -30,6 +30,11 @@
 #import <string.h>
 
 #import "StripedTextTableViewController.h"
+#if __has_include("../../../include/TVNCSharedState.h")
+#import "../../../include/TVNCSharedState.h"
+#else
+#import "../../include/TVNCSharedState.h"
+#endif
 #import "TVNCClientListController.h"
 #import "TVNCRootListController.h"
 #import "TVNCUtil.h"
@@ -37,6 +42,7 @@
 
 #ifdef THEBOOTSTRAP
 #import "GitHubReleaseUpdater.h"
+#import "TrollVNC-Swift.h"
 #endif
 
 NS_INLINE NSString *GetDefaultRouteInterface(void) {
@@ -306,6 +312,21 @@ NS_INLINE NSString *TVNCGetEn0IPAddress(void) {
     [super viewWillAppear:animated];
 
     [self updateFirstGroupAndReload:YES];
+}
+
+- (void)setPreferenceValue:(id)value specifier:(PSSpecifier *)specifier {
+    NSString *key = [specifier propertyForKey:@"key"];
+    if ([key isEqualToString:TVNCWidgetRefreshIntervalKey()]) {
+        value = @(TVNCSanitizedWidgetRefreshInterval(value));
+    }
+
+    [super setPreferenceValue:value specifier:specifier];
+
+    if ([key isEqualToString:TVNCWidgetRefreshIntervalKey()] && TVNCWriteWidgetRefreshInterval(value)) {
+#ifdef THEBOOTSTRAP
+        [TVNCWidgetTimelineReloader reloadAutostartTimeline];
+#endif
+    }
 }
 
 - (void)showClients {
@@ -740,6 +761,10 @@ NS_INLINE NSString *TVNCGetEn0IPAddress(void) {
 - (void)_reallyResetDefaults {
     [[NSUserDefaults standardUserDefaults] removePersistentDomainForName:@"com.82flex.trollvnc"];
     [[NSUserDefaults standardUserDefaults] synchronize];
+    TVNCWriteWidgetRefreshInterval(@(TVNCDefaultWidgetRefreshInterval()));
+#ifdef THEBOOTSTRAP
+    [TVNCWidgetTimelineReloader reloadAutostartTimeline];
+#endif
 
     [self reloadSpecifiers];
 }

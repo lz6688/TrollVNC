@@ -166,6 +166,12 @@
 
 "Shown to VNC clients" = "Shown to VNC clients";
 
+"Widget Autostart" = "Widget Autostart";
+
+"Refresh Interval (sec)" = "Refresh Interval (sec)";
+
+"Earliest Widget timeline retry request in seconds. Default 300; valid range 5–3600. WidgetKit may delay the actual refresh." = "Earliest Widget timeline retry request in seconds. Default 300; valid range 5–3600. WidgetKit may delay the actual refresh.";
+
 "Silence Notifications" = "Silence Notifications";
 
 "Single fps (e.g. 60), range min-max (e.g. 30-60), or full spec min:pref:max (e.g. 30:60:120). iOS 15+ uses range; iOS 14 uses preferred/max." = "Single fps (e.g. 60), range min-max (e.g. 30-60), or full spec min:pref:max (e.g. 30:60:120). iOS 15+ uses range; iOS 14 uses preferred/max.";

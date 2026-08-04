@@ -28,11 +28,11 @@
 9. 只有在未越狱环境且服务未运行时，helper 才向 App Group 写入 `.trollvnc.widget-startup-need-lock.<bundle id>`。
 10. helper 调用 `SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions`，并把 unlock options 同时传入 `appOptions` 和 `launchOptions`；若失败，再 fallback 到 `SBSLaunchApplicationWithIdentifierAndLaunchOptions`，最多重试 3 次。
 11. 只有 SpringBoardServices 返回成功后，helper 才向 App Group 写入 `.trollvnc.widget-launched.<bundle id>`；失败会清理标记，等待下次 Widget 心跳继续重试。
-12. Widget 返回的颜色值用于显示当前状态，并请求最早 5 分钟后刷新。
+12. Widget 返回的颜色值用于显示当前状态，并根据 App Group 中的 `WidgetRefreshIntervalSeconds` 请求下一次刷新；默认 300 秒，有效范围 5–3600 秒。
 
 ## 关键实现点
 
-- `TrollVNCAutostartWidget.swift` 使用 `.after(Date().addingTimeInterval(5 * 60))` 请求最早 5 分钟后刷新，避免用无效的秒级请求消耗刷新预算；实际时间仍由 WidgetKit 调度。
+- `TrollVNCAutostartWidget.swift` 从 App Group 读取刷新间隔并使用 `.after(...)` 请求下一次 timeline。普通版本可在 VNC 设置页输入秒数，Managed 构建可通过 `TVNC_WIDGET_REFRESH_INTERVAL_SECONDS` 提供强制值；实际时间仍由 WidgetKit 调度。
 - Widget 支持 `.systemSmall`，iOS 16+ 额外支持 `.accessoryCircular`。
 - helper 使用 ObjC++ 实现，链接项目已有的 `SpringBoardServices.tbd`。
 - helper 中 bundle id、标记文件名等启动相关字符串使用编译期 XOR 模板混淆；App Group ID 必须出现在 entitlement 中，因此不做字符串隐藏。

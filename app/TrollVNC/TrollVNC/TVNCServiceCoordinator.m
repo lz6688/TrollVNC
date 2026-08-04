@@ -24,6 +24,7 @@
 #import <netinet/in.h>
 #import <sys/socket.h>
 
+#import "../../../include/TVNCSharedState.h"
 #import "Control.h"
 
 NSNotificationName const TVNCServiceStatusDidChangeNotification = @"TVNCServiceStatusDidChangeNotification";
@@ -80,16 +81,28 @@ int SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions(CFStringRef bundleI
     _checkTimer = nil;
     _serviceRunning = NO;
     _userDefaults = [[NSUserDefaults alloc] initWithSuiteName:@"com.82flex.trollvnc"];
+    [_userDefaults registerDefaults:@{
+        TVNCWidgetRefreshIntervalKey() : @(TVNCDefaultWidgetRefreshInterval()),
+    }];
 
     NSBundle *prefsBundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"TrollVNCPrefs"
                                                                                      ofType:@"bundle"]];
 
+    NSDictionary *presetDefaults = nil;
     NSString *presetPath = [prefsBundle pathForResource:@"Managed" ofType:@"plist"];
     if (presetPath) {
-        NSDictionary *presetDefaults = [NSDictionary dictionaryWithContentsOfFile:presetPath];
+        presetDefaults = [NSDictionary dictionaryWithContentsOfFile:presetPath];
         if (presetDefaults) {
             [_userDefaults registerDefaults:presetDefaults];
         }
+    }
+
+    id configuredInterval = presetDefaults[TVNCWidgetRefreshIntervalKey()] ?:
+        [_userDefaults objectForKey:TVNCWidgetRefreshIntervalKey()];
+    NSTimeInterval previousInterval = TVNCWidgetRefreshInterval();
+    NSTimeInterval nextInterval = TVNCSanitizedWidgetRefreshInterval(configuredInterval);
+    if (TVNCWriteWidgetRefreshInterval(@(nextInterval)) && previousInterval != nextInterval) {
+        [TVNCWidgetTimelineReloader reloadAutostartTimeline];
     }
 }
 

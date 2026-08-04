@@ -5,6 +5,7 @@
 #import <TargetConditionals.h>
 
 #import <errno.h>
+#import <math.h>
 #import <sys/stat.h>
 #import <sys/sysctl.h>
 #import <unistd.h>
@@ -13,8 +14,57 @@ static inline NSString *TVNCAppGroupIdentifier(void) {
     return @"group.com.82flex.TrollVNCApp";
 }
 
+static inline NSURL *TVNCAppGroupContainerURL(void) {
+    return [[NSFileManager defaultManager]
+        containerURLForSecurityApplicationGroupIdentifier:TVNCAppGroupIdentifier()];
+}
+
 static inline NSString *TVNCJailbreakServiceStateName(void) {
     return @".trollvnc.jailbreak-service";
+}
+
+static inline NSString *TVNCWidgetRefreshIntervalKey(void) {
+    return @"WidgetRefreshIntervalSeconds";
+}
+
+static inline NSTimeInterval TVNCDefaultWidgetRefreshInterval(void) {
+    return 5.0 * 60.0;
+}
+
+static inline NSTimeInterval TVNCSanitizedWidgetRefreshInterval(id value) {
+    if (![value respondsToSelector:@selector(doubleValue)]) {
+        return TVNCDefaultWidgetRefreshInterval();
+    }
+
+    NSTimeInterval interval = [value doubleValue];
+    if (!isfinite(interval)) {
+        return TVNCDefaultWidgetRefreshInterval();
+    }
+    return MIN(MAX(interval, 5.0), 60.0 * 60.0);
+}
+
+static inline NSUserDefaults *TVNCAppGroupDefaults(void) {
+    return [[NSUserDefaults alloc] initWithSuiteName:TVNCAppGroupIdentifier()];
+}
+
+static inline NSTimeInterval TVNCWidgetRefreshInterval(void) {
+    id value = [TVNCAppGroupDefaults() objectForKey:TVNCWidgetRefreshIntervalKey()];
+    return value ? TVNCSanitizedWidgetRefreshInterval(value) : TVNCDefaultWidgetRefreshInterval();
+}
+
+static inline BOOL TVNCWriteWidgetRefreshInterval(id value) {
+    if (!TVNCAppGroupContainerURL()) {
+        return NO;
+    }
+
+    NSUserDefaults *defaults = TVNCAppGroupDefaults();
+    if (!defaults) {
+        return NO;
+    }
+
+    [defaults setDouble:TVNCSanitizedWidgetRefreshInterval(value) forKey:TVNCWidgetRefreshIntervalKey()];
+    [defaults synchronize];
+    return YES;
 }
 
 static inline NSString *TVNCCurrentBootIdentifier(void) {
@@ -26,11 +76,6 @@ static inline NSString *TVNCCurrentBootIdentifier(void) {
     }
 
     return [NSString stringWithFormat:@"%lld.%06d", (long long)bootTime.tv_sec, bootTime.tv_usec];
-}
-
-static inline NSURL *TVNCAppGroupContainerURL(void) {
-    return [[NSFileManager defaultManager]
-        containerURLForSecurityApplicationGroupIdentifier:TVNCAppGroupIdentifier()];
 }
 
 static inline NSURL *TVNCJailbreakServiceStateURL(NSURL *containerURL) {
