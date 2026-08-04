@@ -234,8 +234,18 @@ static int TVNCLaunchApplication(NSString *bundleIdentifier, NSDictionary *launc
     NSURL *jailbreakDetectedStateURL = containerURL ? TVNCJailbreakDetectedStateURL(containerURL) : nil;
     BOOL launched = TVNCMarkerIndicatesCurrentBoot(launchedPath, bootIdentifier);
     BOOL serviceRunning = TVNCServiceIsRunning(jailbreakServiceStateURL, bootIdentifier);
-    BOOL deviceIsJailbroken = TVNCStateAtURLMatchesBoot(jailbreakDetectedStateURL, bootIdentifier);
-    TVNCLog(@"jailbreak detector=%@ source=shared-state path=%@", TVNCBoolString(deviceIsJailbroken),
+    BOOL jailbreakStateExists =
+        jailbreakDetectedStateURL && [fileManager fileExistsAtPath:jailbreakDetectedStateURL.path];
+    BOOL deviceIsJailbroken =
+        jailbreakStateExists && TVNCStateAtURLMatchesBoot(jailbreakDetectedStateURL, bootIdentifier);
+    if (!deviceIsJailbroken) {
+        NSError *writeError = nil;
+        BOOL written = TVNCWriteJailbreakDetectedState(&writeError);
+        TVNCLog(@"update jailbreak state marker=%@ path=%@ error=%@", TVNCBoolString(written),
+                jailbreakDetectedStateURL.path ?: @"-", writeError.localizedDescription ?: @"-");
+    }
+    TVNCLog(@"jailbreak detector=%@ source=shared-state exists=%@ path=%@", TVNCBoolString(deviceIsJailbroken),
+            TVNCBoolString(jailbreakStateExists),
             jailbreakDetectedStateURL.path ?: @"-");
     TVNCLog(@"begin bundle=%@ group=%@ boot=%@ launchedMarker=%@ service=%@ jailbreak=%@",
             bundleIdentifier,

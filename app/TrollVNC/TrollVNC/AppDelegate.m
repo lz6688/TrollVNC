@@ -18,6 +18,7 @@
 #import "AppDelegate.h"
 #import "TVNCHotspotManager.h"
 #import "TVNCServiceCoordinator.h"
+#import "../../../include/TVNCSharedState.h"
 
 #ifdef THEBOOTSTRAP
 #import "GitHubReleaseUpdater.h"
@@ -27,6 +28,19 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
+    NSURL *containerURL = TVNCAppGroupContainerURL();
+    NSURL *jailbreakStateURL = containerURL ? TVNCJailbreakDetectedStateURL(containerURL) : nil;
+    BOOL jailbreakStateExists =
+        jailbreakStateURL && [[NSFileManager defaultManager] fileExistsAtPath:jailbreakStateURL.path];
+    if (!jailbreakStateExists) {
+        NSError *writeError = nil;
+        BOOL written = TVNCWriteJailbreakDetectedState(&writeError);
+        NSLog(@"[TrollVNCApp] initialize jailbreak state marker=%@ path=%@ error=%@",
+              written ? @"yes" : @"no",
+              jailbreakStateURL.path ?: @"-",
+              writeError.localizedDescription ?: @"-");
+    }
+
     [[TVNCServiceCoordinator sharedCoordinator] registerServiceMonitor];
     [[TVNCHotspotManager sharedManager] registerWithName:@"TrollVNC"];
 

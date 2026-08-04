@@ -146,7 +146,16 @@ static inline BOOL TVNCWriteJailbreakDetectedState(NSError **error) {
     }
 
     NSURL *stateURL = TVNCJailbreakDetectedStateURL(containerURL);
-    BOOL written = [bootIdentifier writeToURL:stateURL atomically:YES encoding:NSUTF8StringEncoding error:error];
+    NSError *writeError = nil;
+    BOOL written = [bootIdentifier writeToURL:stateURL atomically:YES encoding:NSUTF8StringEncoding error:&writeError];
+    if (!written && error) {
+        *error = writeError;
+    }
+    NSLog(@"[TrollVNCSharedState] write jailbreak marker=%@ path=%@ boot=%@ error=%@",
+          written ? @"yes" : @"no",
+          stateURL.path,
+          bootIdentifier,
+          writeError.localizedDescription ?: @"-");
     if (written) {
         chmod(stateURL.fileSystemRepresentation, 0644);
         chown(stateURL.fileSystemRepresentation, 501, 501);
