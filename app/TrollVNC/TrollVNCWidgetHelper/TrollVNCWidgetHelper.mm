@@ -83,6 +83,11 @@ static NSString *TVNCWidgetStartupNeedLockPrefix(void) {
     return tvnc_obf::makeNSString(value);
 }
 
+static NSString *TVNCWidgetJailbreakDetectedPrefix(void) {
+    TVNC_OBF(value, ".trollvnc.widget-jailbreak-detected", 0x2736219dbdd4f178ULL);
+    return tvnc_obf::makeNSString(value);
+}
+
 static NSString *TVNCJailbreakProcessName(void) {
     TVNC_OBF(value, "netcc", 0x625f58df67297d6eULL);
     return tvnc_obf::makeNSString(value);
@@ -169,7 +174,17 @@ static BOOL TVNCServiceIsRunning(NSURL *jailbreakServiceStateURL, NSString *boot
            TVNCLoopbackServiceIsRunning();
 }
 
-static BOOL TVNCDeviceIsJailbroken(void) {
+static BOOL TVNCDeviceIsJailbroken(NSFileManager *fileManager, NSString *markerPath, NSString *bootIdentifier) {
+    if (TVNCMarkerIndicatesCurrentBoot(markerPath, bootIdentifier)) {
+        TVNCLog(@"jailbreak detector=yes source=marker path=%@", markerPath);
+        return YES;
+    }
+
+    if (markerPath.length > 0 && [fileManager fileExistsAtPath:markerPath]) {
+        TVNCRemoveMarker(fileManager, markerPath);
+        TVNCLog(@"jailbreak marker expired path=%@", markerPath);
+    }
+
     int processMIB[] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
     size_t processInfoLength = 0;
     if (sysctl(processMIB, 4, NULL, &processInfoLength, NULL, 0) != 0 || processInfoLength == 0) {
@@ -200,8 +215,11 @@ static BOOL TVNCDeviceIsJailbroken(void) {
 
         errno = 0;
         BOOL running = kill(process.p_pid, 0) == 0 || errno == EPERM;
-        TVNCLog(@"jailbreak detector=%@ process=%@ pid=%d", TVNCBoolString(running), targetName,
+        TVNCLog(@"jailbreak detector=%@ source=process process=%@ pid=%d", TVNCBoolString(running), targetName,
                 process.p_pid);
+        if (running) {
+            TVNCWriteMarker(bootIdentifier, markerPath, @"jailbreak");
+        }
         free(processInfo);
         return running;
     }
@@ -280,9 +298,11 @@ static int TVNCLaunchApplication(NSString *bundleIdentifier, NSDictionary *launc
     NSString *launchedPath = TVNCMarkerPath(containerURL, TVNCWidgetLaunchedPrefix(), bundleIdentifier);
     NSString *startupNeedLockPath =
         TVNCMarkerPath(containerURL, TVNCWidgetStartupNeedLockPrefix(), bundleIdentifier);
+    NSString *jailbreakDetectedPath =
+        TVNCMarkerPath(containerURL, TVNCWidgetJailbreakDetectedPrefix(), bundleIdentifier);
     BOOL launched = TVNCMarkerIndicatesCurrentBoot(launchedPath, bootIdentifier);
     BOOL serviceRunning = TVNCServiceIsRunning(jailbreakServiceStateURL, bootIdentifier);
-    BOOL deviceIsJailbroken = TVNCDeviceIsJailbroken();
+    BOOL deviceIsJailbroken = TVNCDeviceIsJailbroken(fileManager, jailbreakDetectedPath, bootIdentifier);
     TVNCLog(@"begin bundle=%@ group=%@ boot=%@ launchedMarker=%@ service=%@ jailbreak=%@",
             bundleIdentifier,
             containerURL.path ?: @"-",
