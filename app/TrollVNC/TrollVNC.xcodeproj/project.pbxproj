@@ -16,6 +16,8 @@
 		615401B52EB1180C009FDD6F /* DpkgVersion.m in Sources */ = {isa = PBXBuildFile; fileRef = CC80617B2E74967500B1AA3E /* DpkgVersion.m */; };
 		615401B62EB1180C009FDD6F /* StripedTextTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 61C756AC2E65BDAC00B2B371 /* StripedTextTableViewController.m */; };
 		615401B72EB1180C009FDD6F /* TaskProcess+ObjC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61C756AD2E65BDAC00B2B371 /* TaskProcess+ObjC.swift */; };
+		CD7A00012F20000100000031 /* TVNCWidgetTimelineReloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD7A00012F20000100000030 /* TVNCWidgetTimelineReloader.swift */; };
+		CD7A00012F20000100000032 /* TVNCWidgetTimelineReloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD7A00012F20000100000030 /* TVNCWidgetTimelineReloader.swift */; };
 		615401B82EB1180C009FDD6F /* TVNCHotspotManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 61C756B02E65BDAC00B2B371 /* TVNCHotspotManager.m */; };
 		615401B92EB1180C009FDD6F /* TVNCRootListController.m in Sources */ = {isa = PBXBuildFile; fileRef = 61C756B22E65BDAC00B2B371 /* TVNCRootListController.m */; };
 		615401BA2EB1180C009FDD6F /* TVNCClientListController.m in Sources */ = {isa = PBXBuildFile; fileRef = CC91EF8F2E6C2208002F5B2A /* TVNCClientListController.m */; };
@@ -123,6 +125,7 @@
 		61C756AB2E65BDAC00B2B371 /* StripedTextTableViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StripedTextTableViewController.h; sourceTree = "<group>"; };
 		61C756AC2E65BDAC00B2B371 /* StripedTextTableViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StripedTextTableViewController.m; sourceTree = "<group>"; };
 		61C756AD2E65BDAC00B2B371 /* TaskProcess+ObjC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TaskProcess+ObjC.swift"; sourceTree = "<group>"; };
+		CD7A00012F20000100000030 /* TVNCWidgetTimelineReloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVNCWidgetTimelineReloader.swift; sourceTree = "<group>"; };
 		61C756AE2E65BDAC00B2B371 /* TrollVNC.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TrollVNC.entitlements; sourceTree = "<group>"; };
 		61C756AF2E65BDAC00B2B371 /* TVNCHotspotManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVNCHotspotManager.h; sourceTree = "<group>"; };
 		61C756B02E65BDAC00B2B371 /* TVNCHotspotManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TVNCHotspotManager.m; sourceTree = "<group>"; };
@@ -268,6 +271,7 @@
 				61C756AB2E65BDAC00B2B371 /* StripedTextTableViewController.h */,
 				61C756AC2E65BDAC00B2B371 /* StripedTextTableViewController.m */,
 				61C756AD2E65BDAC00B2B371 /* TaskProcess+ObjC.swift */,
+				CD7A00012F20000100000030 /* TVNCWidgetTimelineReloader.swift */,
 				CC91EF912E6CA6C5002F5B2A /* TVNCClientCell.h */,
 				CC91EF922E6CA6C5002F5B2A /* TVNCClientCell.m */,
 				CC91EF8E2E6C2208002F5B2A /* TVNCClientListController.h */,
@@ -559,6 +563,7 @@
 				CC8061802E74967500B1AA3E /* DpkgVersion.m in Sources */,
 				61C756C22E65BDAC00B2B371 /* StripedTextTableViewController.m in Sources */,
 				61C756C32E65BDAC00B2B371 /* TaskProcess+ObjC.swift in Sources */,
+				CD7A00012F20000100000031 /* TVNCWidgetTimelineReloader.swift in Sources */,
 				61C756C42E65BDAC00B2B371 /* TVNCHotspotManager.m in Sources */,
 				CC17D9BB2EC79DA1005C275A /* ZTSelfSignedCertificate.m in Sources */,
 				61C756C52E65BDAC00B2B371 /* TVNCRootListController.m in Sources */,
@@ -582,6 +587,7 @@
 				615401B52EB1180C009FDD6F /* DpkgVersion.m in Sources */,
 				615401B62EB1180C009FDD6F /* StripedTextTableViewController.m in Sources */,
 				615401B72EB1180C009FDD6F /* TaskProcess+ObjC.swift in Sources */,
+				CD7A00012F20000100000032 /* TVNCWidgetTimelineReloader.swift in Sources */,
 				615401B82EB1180C009FDD6F /* TVNCHotspotManager.m in Sources */,
 				CC17D9BA2EC79DA1005C275A /* ZTSelfSignedCertificate.m in Sources */,
 				615401B92EB1180C009FDD6F /* TVNCRootListController.m in Sources */,

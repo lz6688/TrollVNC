@@ -11,9 +11,6 @@
 import CoreFoundation
 import Darwin
 import Foundation
-#if canImport(WidgetKit)
-import WidgetKit
-#endif
 
 @_silgen_name("posix_spawnattr_set_persona_np")
 private func posix_spawnattr_set_persona_np(
@@ -863,12 +860,3 @@ open class TaskProcess: NSObject {
 public extension TaskProcess {
     @objc static let didTerminateNotification = NSNotification.Name(rawValue: "TRTaskDidTerminateNotification")
 }
-
-#if canImport(WidgetKit)
-@objc(TVNCWidgetTimelineReloader)
-public final class WidgetTimelineReloader: NSObject {
-    @objc public static func reloadAutostartTimeline() {
-        WidgetCenter.shared.reloadTimelines(ofKind: "TrollVNCAutostartWidget")
-    }
-}
-#endif
