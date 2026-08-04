@@ -34,6 +34,7 @@
 #import "Control.h"
 #import "Logging.h"
 #import "TRWatchDog.h"
+#import "../include/TVNCSharedState.h"
 #import "libproc.h"
 
 #define SINGLETON_MARKER_PATH "/var/mobile/Library/Caches/com.82flex.trollvnc.manager.pid"
@@ -215,7 +216,14 @@ int main(int argc, const char *argv[]) {
     fchown(lockFD, 501, 501);
 
     @autoreleasepool {
-        NSString *executablePath = [NSString stringWithUTF8String:argv[0]];
+        NSString *managerExecutablePath = [NSString stringWithUTF8String:argv[0]];
+        NSError *sharedStateError = nil;
+        if (!TVNCWriteJailbreakServiceState(managerExecutablePath, &sharedStateError)) {
+            const char *description = sharedStateError.localizedDescription.UTF8String ?: "unknown error";
+            fprintf(stderr, "Failed to write shared jailbreak state: %s\n", description);
+        }
+
+        NSString *executablePath = managerExecutablePath;
         executablePath = [executablePath stringByDeletingLastPathComponent];
         executablePath = [executablePath stringByAppendingPathComponent:@"trollvncserver"];
 

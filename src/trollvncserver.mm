@@ -52,6 +52,7 @@
 #import "PSAssistiveTouchSettingsDetail.h"
 #import "STHIDEventGenerator.h"
 #import "ScreenCapturer.h"
+#import "../include/TVNCSharedState.h"
 
 #define LocalizedString(key, comment, bundle, table)                                                                   \
     (NSLocalizedStringFromTableInBundle((key), (table), (bundle), (comment)) ?: (key))
@@ -5174,6 +5175,15 @@ int main(int argc, const char *argv[]) {
 
     @autoreleasepool {
         parseCLI(argc, argv);
+
+        if (argv && argv[0]) {
+            NSString *executablePath = [NSString stringWithUTF8String:argv[0]];
+            NSError *sharedStateError = nil;
+            if (!TVNCWriteJailbreakServiceState(executablePath, &sharedStateError)) {
+                const char *description = sharedStateError.localizedDescription.UTF8String ?: "unknown error";
+                TVPrintError("Failed to write shared jailbreak state: %s", description);
+            }
+        }
 
 #ifdef THEBOOTSTRAP
         monitorParentProcess();

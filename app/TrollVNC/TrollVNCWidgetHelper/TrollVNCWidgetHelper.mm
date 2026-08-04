@@ -1,14 +1,21 @@
 #import "TrollVNCWidgetHelper.h"
 
-#import <errno.h>
+#import <arpa/inet.h>
 #import <dlfcn.h>
-#import <fcntl.h>
-#import <spawn.h>
+#import <limits.h>
+#import <mach-o/dyld.h>
+#import <mach/mach.h>
+#import <mach/mach_init.h>
+#import <netinet/in.h>
 #import <stdint.h>
-#import <signal.h>
 #import <string.h>
-#import <sys/wait.h>
+#import <sys/mount.h>
+#import <sys/socket.h>
+#import <sys/stat.h>
 #import <unistd.h>
+
+#import "../TrollVNC/Control.h"
+#import "../../../include/TVNCSharedState.h"
 
 FOUNDATION_EXPORT NSString *const SBSApplicationLaunchOptionUnlockDeviceKey;
 FOUNDATION_EXPORT int SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions(CFStringRef bundleIdentifier,
@@ -21,8 +28,6 @@ FOUNDATION_EXPORT int SBSLaunchApplicationWithIdentifierAndLaunchOptions(CFStrin
                                                                          CFDictionaryRef launchOptions,
                                                                          BOOL suspended);
 FOUNDATION_EXPORT void SBSLockDevice(void);
-
-extern char **environ;
 
 namespace tvnc_obf {
 
@@ -73,102 +78,12 @@ static NSString *TVNCDefaultBundleIdentifier(void) {
 }
 
 static NSString *TVNCWidgetLaunchedPrefix(void) {
-    TVNC_OBF(value, "/tmp/.trollvnc.widget-launched", 0x7d01e3db4520a811ULL);
+    TVNC_OBF(value, ".trollvnc.widget-launched", 0x7d01e3db4520a811ULL);
     return tvnc_obf::makeNSString(value);
 }
 
 static NSString *TVNCWidgetStartupNeedLockPrefix(void) {
-    TVNC_OBF(value, "/tmp/.trollvnc.widget-startup-need-lock", 0xe4b475b39023d65aULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCManagerPidPath(void) {
-    TVNC_OBF(value, "/var/mobile/Library/Caches/com.82flex.trollvnc.manager.pid", 0x61c2a0b48fe73d09ULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCServerPidPath(void) {
-    TVNC_OBF(value, "/var/mobile/Library/Caches/com.82flex.trollvnc.server.pid", 0x462ea4a79afec383ULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCRootlessLaunchctlPath(void) {
-    TVNC_OBF(value, "/var/jb/usr/bin/launchctl", 0x5e71d9280cb4ac6bULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCRootlessDpkgStatusPath(void) {
-    TVNC_OBF(value, "/var/jb/var/lib/dpkg/status", 0xa53030e8337e10a4ULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCRootlessDpkgPath(void) {
-    TVNC_OBF(value, "/var/jb/usr/bin/dpkg", 0x2ef6d4158ba7c139ULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCRootlessJbctlPath(void) {
-    TVNC_OBF(value, "/var/jb/basebin/jbctl", 0x97fa4f3db06d816cULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCRootlessTweakInjectPath(void) {
-    TVNC_OBF(value, "/var/jb/usr/lib/TweakInject.dylib", 0x766e093172ccc9b6ULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCRootlessMobileSubstratePath(void) {
-    TVNC_OBF(value, "/var/jb/Library/MobileSubstrate/MobileSubstrate.dylib", 0x3f0d9685a8e9cd82ULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCRootlessSileoPath(void) {
-    TVNC_OBF(value, "/var/jb/Applications/Sileo.app", 0x37e2d45cedd90b91ULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCRootlessZebraPath(void) {
-    TVNC_OBF(value, "/var/jb/Applications/Zebra.app", 0x4d135cd3a4309e17ULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCRootfulDpkgStatusPath(void) {
-    TVNC_OBF(value, "/var/lib/dpkg/status", 0xfdb0c24ff9fbb513ULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCRootfulDpkgPath(void) {
-    TVNC_OBF(value, "/usr/bin/dpkg", 0x34de081aca507f3eULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCRootfulMobileSubstratePath(void) {
-    TVNC_OBF(value, "/Library/MobileSubstrate/MobileSubstrate.dylib", 0x28d0bbdb667f2cb6ULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCRootfulCydiaPath(void) {
-    TVNC_OBF(value, "/Applications/Cydia.app", 0x1a5d102e9bc541faULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCRootfulSileoPath(void) {
-    TVNC_OBF(value, "/Applications/Sileo.app", 0x5d4f76cb17b44829ULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCRootfulZebraPath(void) {
-    TVNC_OBF(value, "/Applications/Zebra.app", 0x946da65fdd6bd721ULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCRootfulBashPath(void) {
-    TVNC_OBF(value, "/bin/bash", 0xc0e6d4a59783ae5cULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCRootfulSshdPath(void) {
-    TVNC_OBF(value, "/usr/sbin/sshd", 0x6afc8312ad3ae859ULL);
+    TVNC_OBF(value, ".trollvnc.widget-startup-need-lock", 0xe4b475b39023d65aULL);
     return tvnc_obf::makeNSString(value);
 }
 
@@ -182,13 +97,12 @@ static NSString *TVNCSBSURLUnlockKeySymbol(void) {
     return tvnc_obf::makeNSString(value);
 }
 
-static NSString *TVNCMarkerContent(void) {
-    TVNC_OBF(value, "ok", 0x172b69f5d9b40c33ULL);
-    return tvnc_obf::makeNSString(value);
-}
-
-static NSString *TVNCMarkerPath(NSString *prefix, NSString *bundleIdentifier) {
-    return [NSString stringWithFormat:@"%@.%@", prefix, bundleIdentifier];
+static NSString *TVNCMarkerPath(NSURL *containerURL, NSString *prefix, NSString *bundleIdentifier) {
+    if (!containerURL) {
+        return nil;
+    }
+    NSString *name = [NSString stringWithFormat:@"%@.%@", prefix, bundleIdentifier];
+    return [[containerURL URLByAppendingPathComponent:name isDirectory:NO] path];
 }
 
 static NSString *TVNCBoolString(BOOL value) {
@@ -207,6 +121,11 @@ static void TVNCLog(NSString *format, ...) {
 }
 
 static BOOL TVNCWriteMarker(NSString *content, NSString *path, NSString *name) {
+    if (content.length == 0 || path.length == 0) {
+        TVNCLog(@"write %@ marker=no path=%@ error=shared state unavailable", name, path ?: @"-");
+        return NO;
+    }
+
     NSError *error = nil;
     BOOL ok = [content writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:&error];
     TVNCLog(@"write %@ marker=%@ path=%@ error=%@", name, TVNCBoolString(ok), path,
@@ -214,18 +133,238 @@ static BOOL TVNCWriteMarker(NSString *content, NSString *path, NSString *name) {
     return ok;
 }
 
-static BOOL TVNCPidFileIndicatesRunning(NSString *path) {
-    NSString *pidText = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
-    pid_t pid = (pid_t)[pidText integerValue];
-    if (pid <= 0) {
+static void TVNCRemoveMarker(NSFileManager *fileManager, NSString *path) {
+    if (path.length > 0) {
+        [fileManager removeItemAtPath:path error:nil];
+    }
+}
+
+static BOOL TVNCMarkerIndicatesCurrentBoot(NSString *path, NSString *bootIdentifier) {
+    if (path.length == 0) {
+        return NO;
+    }
+    return TVNCStateAtURLMatchesBoot([NSURL fileURLWithPath:path], bootIdentifier);
+}
+
+static BOOL TVNCLoopbackServiceIsRunning(void) {
+    int socketFD = socket(AF_INET, SOCK_STREAM, 0);
+    if (socketFD < 0) {
         return NO;
     }
 
-    if (kill(pid, 0) == 0) {
-        return YES;
+    struct sockaddr_in address = {};
+    address.sin_len = sizeof(address);
+    address.sin_family = AF_INET;
+    address.sin_port = htons(kTvAlivePort);
+    address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+
+    BOOL running = connect(socketFD, (struct sockaddr *)&address, sizeof(address)) == 0;
+    close(socketFD);
+    return running;
+}
+
+static BOOL TVNCServiceIsRunning(NSURL *jailbreakServiceStateURL, NSString *bootIdentifier) {
+    return TVNCProcessInStateAtURLIsRunning(jailbreakServiceStateURL, bootIdentifier) ||
+           TVNCLoopbackServiceIsRunning();
+}
+
+static BOOL TVNCPathExists(NSString *path) {
+    struct stat info = {};
+    return path.length > 0 && lstat(path.fileSystemRepresentation, &info) == 0;
+}
+
+static NSString *TVNCResolvedSymlinkAtPath(NSString *path) {
+    struct stat info = {};
+    if (lstat(path.fileSystemRepresentation, &info) != 0 || !S_ISLNK(info.st_mode)) {
+        return nil;
     }
 
-    return errno == EPERM;
+    char destination[PATH_MAX + 1] = {};
+    ssize_t length = readlink(path.fileSystemRepresentation, destination, PATH_MAX);
+    if (length <= 0) {
+        return nil;
+    }
+    destination[length] = '\0';
+
+    NSString *resolved = [NSString stringWithUTF8String:destination];
+    if (![resolved hasPrefix:@"/"]) {
+        resolved = [[path stringByDeletingLastPathComponent] stringByAppendingPathComponent:resolved];
+    }
+    return [resolved stringByStandardizingPath];
+}
+
+static BOOL TVNCRootlessBootstrapIsVisible(NSMutableArray<NSString *> *signals) {
+    NSString *rootPath = @"/var/jb";
+    if (!TVNCPathExists(rootPath)) {
+        return NO;
+    }
+
+    NSString *resolvedRoot = TVNCResolvedSymlinkAtPath(rootPath) ?: rootPath;
+    NSArray<NSString *> *relativeMarkers = @[
+        @"basebin/jailbreakd",
+        @"basebin/jbctl",
+        @"procursus",
+        @"usr/bin/dpkg",
+        @"usr/lib/ellekit",
+        @"Library/MobileSubstrate",
+    ];
+
+    for (NSString *marker in relativeMarkers) {
+        if (TVNCPathExists([resolvedRoot stringByAppendingPathComponent:marker])) {
+            [signals addObject:[NSString stringWithFormat:@"rootless-bootstrap:%@", marker]];
+            return YES;
+        }
+    }
+
+    if (![resolvedRoot isEqualToString:rootPath] &&
+        [resolvedRoot hasPrefix:@"/private/preboot/"] && TVNCPathExists(resolvedRoot)) {
+        [signals addObject:@"rootless-bootstrap:/var/jb-symlink"];
+        return YES;
+    }
+    return NO;
+}
+
+typedef kern_return_t (*TVNCBootstrapLookupFunction)(mach_port_t, const char *, mach_port_t *);
+
+static BOOL TVNCKnownJailbreakMachServiceIsReachable(NSMutableArray<NSString *> *signals) {
+    TVNCBootstrapLookupFunction lookup =
+        (TVNCBootstrapLookupFunction)dlsym(RTLD_DEFAULT, "bootstrap_look_up");
+    if (!lookup) {
+        return NO;
+    }
+
+    static const char *serviceNames[] = {
+        "cy:com.saurik.substrated",
+        "org.coolstar.jailbreakd",
+        "jailbreakd",
+        "cy:com.opa334.jailbreakd",
+        "lh:com.opa334.jailbreakd",
+        "com.opa334.jailbreakd",
+    };
+
+    BOOL detected = NO;
+    for (const char *serviceName : serviceNames) {
+        mach_port_t port = MACH_PORT_NULL;
+        kern_return_t result = lookup(bootstrap_port, serviceName, &port);
+        if (result == KERN_SUCCESS && MACH_PORT_VALID(port)) {
+            [signals addObject:[NSString stringWithFormat:@"mach-service:%s", serviceName]];
+            mach_port_deallocate(mach_task_self(), port);
+            detected = YES;
+        }
+    }
+    return detected;
+}
+
+static BOOL TVNCInjectedJailbreakLibraryIsLoaded(NSMutableArray<NSString *> *signals) {
+    static NSArray<NSString *> *needles;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        needles = @[
+            @"ellekit",
+            @"libhooker",
+            @"mobilesubstrate",
+            @"substrateloader",
+            @"substitute",
+            @"tweakinject",
+            @"roothideinit",
+            @"systemhook.dylib",
+        ];
+    });
+
+    uint32_t imageCount = _dyld_image_count();
+    for (uint32_t index = 0; index < imageCount; ++index) {
+        const char *imageName = _dyld_get_image_name(index);
+        if (!imageName) {
+            continue;
+        }
+        NSString *lowercaseName = [[NSString stringWithUTF8String:imageName] lowercaseString];
+        for (NSString *needle in needles) {
+            if ([lowercaseName containsString:needle]) {
+                [signals addObject:[NSString stringWithFormat:@"loaded-image:%@", needle]];
+                return YES;
+            }
+        }
+    }
+    return NO;
+}
+
+static BOOL TVNCUnexpectedBindMountIsPresent(NSMutableArray<NSString *> *signals) {
+    struct statfs *mounts = NULL;
+    int count = getmntinfo(&mounts, MNT_NOWAIT);
+    if (count <= 0 || !mounts) {
+        return NO;
+    }
+
+    static const char *allowedMountPoints[] = {
+        "/usr/standalone/firmware",
+        "/System/Library/Pearl/ReferenceFrames",
+        "/System/Library/Caches/com.apple.factorydata",
+    };
+
+    for (int index = 0; index < count; ++index) {
+        if (strcmp(mounts[index].f_fstypename, "bindfs") != 0) {
+            continue;
+        }
+
+        BOOL allowed = NO;
+        for (const char *mountPoint : allowedMountPoints) {
+            if (strcmp(mounts[index].f_mntonname, mountPoint) == 0) {
+                allowed = YES;
+                break;
+            }
+        }
+        if (!allowed) {
+            [signals addObject:[NSString stringWithFormat:@"bind-mount:%s", mounts[index].f_mntonname]];
+            return YES;
+        }
+    }
+    return NO;
+}
+
+static BOOL TVNCActiveRootfulJailbreakIsVisible(NSMutableArray<NSString *> *signals) {
+    struct statfs rootFileSystem = {};
+    if (statfs("/", &rootFileSystem) != 0 || strstr(rootFileSystem.f_mntfromname, "@") != NULL) {
+        return NO;
+    }
+
+    NSArray<NSString *> *markers = @[
+        @"/Library/MobileSubstrate/MobileSubstrate.dylib",
+        @"/Library/MobileSubstrate/CydiaSubstrate.dylib",
+        @"/usr/lib/libhooker.dylib",
+        @"/usr/lib/libsubstitute.dylib",
+        @"/Applications/Cydia.app",
+        @"/usr/bin/dpkg",
+        @"/etc/apt",
+    ];
+
+    NSUInteger matches = 0;
+    for (NSString *marker in markers) {
+        if (TVNCPathExists(marker) && ++matches >= 2) {
+            [signals addObject:@"rootful-bootstrap:non-snapshot-root"];
+            return YES;
+        }
+    }
+    return NO;
+}
+
+static BOOL TVNCDeviceIsJailbroken(void) {
+#if TARGET_OS_SIMULATOR
+    TVNCLog(@"jailbreak detector=no signals=simulator");
+    return NO;
+#else
+    NSMutableArray<NSString *> *signals = [NSMutableArray array];
+    BOOL detected = NO;
+    detected |= TVNCKnownJailbreakMachServiceIsReachable(signals);
+    detected |= TVNCInjectedJailbreakLibraryIsLoaded(signals);
+    detected |= TVNCRootlessBootstrapIsVisible(signals);
+    detected |= TVNCUnexpectedBindMountIsPresent(signals);
+    detected |= TVNCActiveRootfulJailbreakIsVisible(signals);
+
+    TVNCLog(@"jailbreak detector=%@ signals=%@",
+            TVNCBoolString(detected),
+            signals.count > 0 ? [signals componentsJoinedByString:@","] : @"none");
+    return detected;
+#endif
 }
 
 static void TVNCSetOptionalSBSBooleanOption(NSMutableDictionary *options, NSString *symbolName) {
@@ -272,129 +411,6 @@ static int TVNCLaunchApplication(NSString *bundleIdentifier, NSDictionary *launc
     return result;
 }
 
-typedef NSString *(*TVNCPathProvider)(void);
-
-static BOOL TVNCFileExistsAtAnyPath(NSFileManager *fileManager, const TVNCPathProvider *providers, size_t count) {
-    for (size_t i = 0; i < count; ++i) {
-        if ([fileManager fileExistsAtPath:providers[i]()]) {
-            return YES;
-        }
-    }
-
-    return NO;
-}
-
-static BOOL TVNCExecutableProbeSucceeds(NSString *path, NSArray<NSString *> *arguments, NSString *name) {
-    NSUInteger argc = arguments.count + 2;
-    char **argv = (char **)calloc(argc, sizeof(char *));
-    if (!argv) {
-        TVNCLog(@"jailbreak probe=%@ alloc failed", name);
-        return NO;
-    }
-
-    argv[0] = strdup([path fileSystemRepresentation]);
-    for (NSUInteger i = 0; i < arguments.count; ++i) {
-        argv[i + 1] = strdup([arguments[i] UTF8String]);
-    }
-
-    posix_spawn_file_actions_t actions;
-    BOOL actionsReady = posix_spawn_file_actions_init(&actions) == 0;
-    if (actionsReady) {
-        posix_spawn_file_actions_addopen(&actions, STDIN_FILENO, "/dev/null", O_RDONLY, 0);
-        posix_spawn_file_actions_addopen(&actions, STDOUT_FILENO, "/dev/null", O_WRONLY, 0);
-        posix_spawn_file_actions_addopen(&actions, STDERR_FILENO, "/dev/null", O_WRONLY, 0);
-    }
-
-    pid_t pid = -1;
-    int spawnResult = posix_spawn(&pid, argv[0], actionsReady ? &actions : NULL, NULL, argv, environ);
-
-    if (actionsReady) {
-        posix_spawn_file_actions_destroy(&actions);
-    }
-    for (NSUInteger i = 0; i < argc; ++i) {
-        free(argv[i]);
-    }
-    free(argv);
-
-    if (spawnResult != 0) {
-        TVNCLog(@"jailbreak probe=%@ spawn failed errno=%d", name, spawnResult);
-        return NO;
-    }
-
-    int status = 0;
-    BOOL exited = NO;
-    for (NSUInteger attempt = 0; attempt < 20; ++attempt) {
-        pid_t waitResult = waitpid(pid, &status, WNOHANG);
-        if (waitResult == pid) {
-            exited = YES;
-            break;
-        }
-        if (waitResult < 0) {
-            TVNCLog(@"jailbreak probe=%@ wait failed errno=%d", name, errno);
-            return NO;
-        }
-        usleep(100000);
-    }
-
-    if (!exited) {
-        kill(pid, SIGKILL);
-        waitpid(pid, &status, 0);
-        TVNCLog(@"jailbreak probe=%@ timed out", name);
-        return NO;
-    }
-
-    BOOL ok = WIFEXITED(status) && WEXITSTATUS(status) == 0;
-    TVNCLog(@"jailbreak probe=%@ exited=%@ status=%d", name, TVNCBoolString(ok), status);
-    return ok;
-}
-
-static BOOL TVNCDeviceIsJailbroken(NSFileManager *fileManager) {
-    static const TVNCPathProvider rootlessMarkers[] = {
-        TVNCRootlessDpkgStatusPath,
-        TVNCRootlessDpkgPath,
-        TVNCRootlessJbctlPath,
-        TVNCRootlessTweakInjectPath,
-        TVNCRootlessMobileSubstratePath,
-        TVNCRootlessSileoPath,
-        TVNCRootlessZebraPath,
-    };
-
-    static const TVNCPathProvider rootfulMarkers[] = {
-        TVNCRootfulDpkgStatusPath,
-        TVNCRootfulMobileSubstratePath,
-        TVNCRootfulCydiaPath,
-        TVNCRootfulSileoPath,
-        TVNCRootfulZebraPath,
-        TVNCRootfulBashPath,
-        TVNCRootfulSshdPath,
-        TVNCRootfulDpkgPath,
-    };
-
-    BOOL hasRootlessMarkers =
-        [fileManager fileExistsAtPath:TVNCRootlessLaunchctlPath()] &&
-        TVNCFileExistsAtAnyPath(fileManager, rootlessMarkers, sizeof(rootlessMarkers) / sizeof(rootlessMarkers[0]));
-    if (hasRootlessMarkers &&
-        TVNCExecutableProbeSucceeds(TVNCRootlessLaunchctlPath(), @[ @"help" ], @"rootless launchctl")) {
-        return YES;
-    }
-
-    if (!TVNCFileExistsAtAnyPath(fileManager, rootfulMarkers, sizeof(rootfulMarkers) / sizeof(rootfulMarkers[0]))) {
-        return NO;
-    }
-
-    if ([fileManager fileExistsAtPath:TVNCRootfulBashPath()] &&
-        TVNCExecutableProbeSucceeds(TVNCRootfulBashPath(), @[ @"-c", @":" ], @"rootful bash")) {
-        return YES;
-    }
-
-    if ([fileManager fileExistsAtPath:TVNCRootfulDpkgPath()] &&
-        TVNCExecutableProbeSucceeds(TVNCRootfulDpkgPath(), @[ @"--version" ], @"rootful dpkg")) {
-        return YES;
-    }
-
-    return NO;
-}
-
 @implementation TrollVNCWidgetHelper
 
 + (uint32_t)launchTrollVNCIfNecessary {
@@ -408,20 +424,22 @@ static BOOL TVNCDeviceIsJailbroken(NSFileManager *fileManager) {
     }
 
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    NSString *launchedPath = TVNCMarkerPath(TVNCWidgetLaunchedPrefix(), bundleIdentifier);
-    BOOL launched = [fileManager fileExistsAtPath:launchedPath];
-    BOOL managerRunning = TVNCPidFileIndicatesRunning(TVNCManagerPidPath());
-    BOOL serverRunning = TVNCPidFileIndicatesRunning(TVNCServerPidPath());
-    BOOL serviceRunning = managerRunning || serverRunning;
-    BOOL deviceIsJailbroken = TVNCDeviceIsJailbroken(fileManager);
-    TVNCLog(@"begin bundle=%@ launchedMarker=%@ managerPid=%@ serverPid=%@ jailbreak=%@",
+    NSURL *containerURL = TVNCAppGroupContainerURL();
+    NSString *bootIdentifier = TVNCCurrentBootIdentifier();
+    NSURL *jailbreakServiceStateURL = containerURL ? TVNCJailbreakServiceStateURL(containerURL) : nil;
+    NSString *launchedPath = TVNCMarkerPath(containerURL, TVNCWidgetLaunchedPrefix(), bundleIdentifier);
+    NSString *startupNeedLockPath =
+        TVNCMarkerPath(containerURL, TVNCWidgetStartupNeedLockPrefix(), bundleIdentifier);
+    BOOL launched = TVNCMarkerIndicatesCurrentBoot(launchedPath, bootIdentifier);
+    BOOL serviceRunning = TVNCServiceIsRunning(jailbreakServiceStateURL, bootIdentifier);
+    BOOL deviceIsJailbroken = TVNCDeviceIsJailbroken();
+    TVNCLog(@"begin bundle=%@ group=%@ boot=%@ launchedMarker=%@ service=%@ jailbreak=%@",
             bundleIdentifier,
+            containerURL.path ?: @"-",
+            bootIdentifier ?: @"-",
             TVNCBoolString(launched),
-            TVNCBoolString(managerRunning),
-            TVNCBoolString(serverRunning),
+            TVNCBoolString(serviceRunning),
             TVNCBoolString(deviceIsJailbroken));
-
-    NSString *startupNeedLockPath = TVNCMarkerPath(TVNCWidgetStartupNeedLockPrefix(), bundleIdentifier);
 
     if (deviceIsJailbroken) {
         if (serviceRunning) {
@@ -430,17 +448,16 @@ static BOOL TVNCDeviceIsJailbroken(NSFileManager *fileManager) {
                 return kRunningColor;
             }
 
-            NSString *markerContent = TVNCMarkerContent();
-            TVNCWriteMarker(markerContent, launchedPath, @"launched");
-            TVNCWriteMarker(markerContent, startupNeedLockPath, @"need-lock");
+            TVNCWriteMarker(bootIdentifier, launchedPath, @"launched");
+            TVNCWriteMarker(bootIdentifier, startupNeedLockPath, @"need-lock");
 
             SBSLockDevice();
             TVNCLog(@"jailbreak service running; called lock device only");
             return kLaunchedColor;
         }
 
-        [fileManager removeItemAtPath:launchedPath error:nil];
-        [fileManager removeItemAtPath:startupNeedLockPath error:nil];
+        TVNCRemoveMarker(fileManager, launchedPath);
+        TVNCRemoveMarker(fileManager, startupNeedLockPath);
         TVNCLog(@"jailbreak detected and service stopped; skip app launch");
         return kRunningColor;
     }
@@ -450,18 +467,17 @@ static BOOL TVNCDeviceIsJailbroken(NSFileManager *fileManager) {
         return kRunningColor;
     }
 
-    NSString *markerContent = TVNCMarkerContent();
-    TVNCWriteMarker(markerContent, startupNeedLockPath, @"need-lock");
+    TVNCWriteMarker(bootIdentifier, startupNeedLockPath, @"need-lock");
 
     int result = TVNCLaunchApplication(bundleIdentifier, TVNCLaunchOptions(), 3);
     if (result == 0) {
-        TVNCWriteMarker(markerContent, launchedPath, @"launched");
+        TVNCWriteMarker(bootIdentifier, launchedPath, @"launched");
         TVNCLog(@"launch app succeeded");
         return kLaunchedColor;
     }
 
-    [fileManager removeItemAtPath:launchedPath error:nil];
-    [fileManager removeItemAtPath:startupNeedLockPath error:nil];
+    TVNCRemoveMarker(fileManager, launchedPath);
+    TVNCRemoveMarker(fileManager, startupNeedLockPath);
     TVNCLog(@"launch app failed; markers removed");
     return kRunningColor;
 }
