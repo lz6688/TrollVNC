@@ -42,7 +42,11 @@
     }
 
     [[TVNCServiceCoordinator sharedCoordinator] registerServiceMonitor];
-    [[TVNCHotspotManager sharedManager] registerWithName:@"TrollVNC"];
+    // Disabled: the NEHotspotHelper-based WiFi autostart chain. Registering the
+    // hotspot helper lets iOS wake the app on WiFi events to run
+    // executeAutoStartupTaskIfNecessary -> ensureServiceRunning. Comment out to
+    // block that chain for now.
+    // [[TVNCHotspotManager sharedManager] registerWithName:@"TrollVNC"];
 
 #ifdef THEBOOTSTRAP
     // Initialize Auto Updater
