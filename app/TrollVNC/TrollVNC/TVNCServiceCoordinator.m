@@ -20,7 +20,6 @@
 
 #import <Foundation/Foundation.h>
 #import <MobileCoreServices/LSApplicationProxy.h>
-#import <UIKit/UIKit.h>
 #import <arpa/inet.h>
 #import <netinet/in.h>
 #import <sys/socket.h>
@@ -130,13 +129,6 @@ int SBSLaunchApplicationWithIdentifierAndURLAndLaunchOptions(CFStringRef bundleI
 }
 
 - (void)ensureServiceRunning {
-    // Do not spawn the manager when the app was woken into the background
-    // (e.g. by NEHotspotHelper / WiFi events); only launch on foreground
-    // activity. Note: a normal launch is Inactive here, not Active.
-    if ([UIApplication sharedApplication].applicationState == UIApplicationStateBackground) {
-        return;
-    }
-
     BOOL running = [self _isServiceRunning];
     if (!running) {
         [self checkPrebootDependencies];
