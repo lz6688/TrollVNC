@@ -29,8 +29,6 @@
 		</dict>
 	</dict>
 	<key>UIBackgroundModes</key>
-	<array>
-		<string>network-authentication</string>
-	</array>
+	<array/>
 </dict>
 </plist>
