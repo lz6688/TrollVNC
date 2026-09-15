@@ -54,10 +54,10 @@
                                                  name:TVNCServiceStatusDidChangeNotification
                                                object:nil];
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(releaseUpdaterDidFindUpdate:)
-                                                 name:GitHubReleaseUpdaterDidFindUpdateNotification
-                                               object:nil];
+    // [[NSNotificationCenter defaultCenter] addObserver:self
+    //                                          selector:@selector(releaseUpdaterDidFindUpdate:)
+    //                                              name:GitHubReleaseUpdaterDidFindUpdateNotification
+    //                                            object:nil];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -67,6 +67,7 @@
         return;
     }
 
+/***
     UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
     [center getNotificationSettingsWithCompletionHandler:^(UNNotificationSettings *_Nonnull settings) {
         if (settings.authorizationStatus == UNAuthorizationStatusNotDetermined) {
@@ -79,9 +80,10 @@
                                   }];
         }
     }];
+***/
 
     if ([[TVNCServiceCoordinator sharedCoordinator] isServiceRunning]) {
-        [self presentNewVersionAlertIfNeeded];
+        // [self presentNewVersionAlertIfNeeded];
         _isAlertPresented = YES;
         return;
     }
