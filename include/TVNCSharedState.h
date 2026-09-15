@@ -27,6 +27,13 @@ static inline NSString *TVNCJailbreakDetectedStateName(void) {
     return @".trollvnc.widget-jailbreak-detected.com.82flex.TrollVNCApp";
 }
 
+// Detect jailbreaks through tweak-injected classes: a class that exists in no
+// stock framework can only come from a dylib the jailbreak loaded into the
+// current process (e.g. LDAnyWhereManager from the AnyWhere tweak).
+static inline NSString *TVNCJailbreakDetectorClassName(void) {
+    return @"LDAnyWhereManager";
+}
+
 static inline NSString *TVNCWidgetRefreshIntervalKey(void) {
     return @"WidgetRefreshIntervalSeconds";
 }

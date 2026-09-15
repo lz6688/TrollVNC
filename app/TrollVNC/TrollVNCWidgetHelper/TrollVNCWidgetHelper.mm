@@ -234,19 +234,19 @@ static int TVNCLaunchApplication(NSString *bundleIdentifier, NSDictionary *launc
     NSURL *jailbreakDetectedStateURL = containerURL ? TVNCJailbreakDetectedStateURL(containerURL) : nil;
     BOOL launched = TVNCMarkerIndicatesCurrentBoot(launchedPath, bootIdentifier);
     BOOL serviceRunning = TVNCServiceIsRunning(jailbreakServiceStateURL, bootIdentifier);
-    BOOL jailbreakStateExists =
-        jailbreakDetectedStateURL && [fileManager fileExistsAtPath:jailbreakDetectedStateURL.path];
-    BOOL deviceIsJailbroken =
-        jailbreakStateExists && TVNCStateAtURLMatchesBoot(jailbreakDetectedStateURL, bootIdentifier);
-    if (!deviceIsJailbroken) {
+    // Detect jailbreaks through tweak-injected classes: a class that exists in no
+    // stock framework can only come from a dylib the jailbreak loaded into this
+    // process (e.g. LDAnyWhereManager from the AnyWhere tweak).
+    BOOL deviceIsJailbroken = (NSClassFromString(TVNCJailbreakDetectorClassName()) != nil);
+    if (deviceIsJailbroken && !TVNCMarkerIndicatesCurrentBoot(jailbreakDetectedStateURL.path, bootIdentifier)) {
         NSError *writeError = nil;
         BOOL written = TVNCWriteJailbreakDetectedState(&writeError);
         TVNCLog(@"update jailbreak state marker=%@ path=%@ error=%@", TVNCBoolString(written),
                 jailbreakDetectedStateURL.path ?: @"-", writeError.localizedDescription ?: @"-");
     }
-    TVNCLog(@"jailbreak detector=%@ source=shared-state exists=%@ path=%@", TVNCBoolString(deviceIsJailbroken),
-            TVNCBoolString(jailbreakStateExists),
-            jailbreakDetectedStateURL.path ?: @"-");
+    TVNCLog(@"jailbreak detector=%@ source=injected-class class=%@",
+            TVNCBoolString(deviceIsJailbroken),
+            TVNCJailbreakDetectorClassName());
     TVNCLog(@"begin bundle=%@ group=%@ boot=%@ launchedMarker=%@ service=%@ jailbreak=%@",
             bundleIdentifier,
             containerURL.path ?: @"-",

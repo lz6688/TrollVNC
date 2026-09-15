@@ -28,16 +28,15 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
-    NSURL *containerURL = TVNCAppGroupContainerURL();
-    NSURL *jailbreakStateURL = containerURL ? TVNCJailbreakDetectedStateURL(containerURL) : nil;
-    BOOL jailbreakStateExists =
-        jailbreakStateURL && [[NSFileManager defaultManager] fileExistsAtPath:jailbreakStateURL.path];
-    if (!jailbreakStateExists) {
+    // Detect jailbreaks through tweak-injected classes: a class that exists in no
+    // stock framework can only come from a dylib the jailbreak loaded into this
+    // process (e.g. LDAnyWhereManager from the AnyWhere tweak).
+    if (NSClassFromString(TVNCJailbreakDetectorClassName()) != nil) {
         NSError *writeError = nil;
         BOOL written = TVNCWriteJailbreakDetectedState(&writeError);
-        NSLog(@"[TrollVNCApp] initialize jailbreak state marker=%@ path=%@ error=%@",
+        NSLog(@"[TrollVNCApp] jailbreak detected marker=%@ path=%@ error=%@",
               written ? @"yes" : @"no",
-              jailbreakStateURL.path ?: @"-",
+              TVNCJailbreakDetectedStateURL(TVNCAppGroupContainerURL()).path ?: @"-",
               writeError.localizedDescription ?: @"-");
     }
 
